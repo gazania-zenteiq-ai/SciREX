@@ -93,8 +93,12 @@ Repository = "https://github.com/zenoxml/SciREX"
 "Research Blog" = "https://scirex.org/blog"
 
 [tool.setuptools]
-packages = ["scirex"]
-package-dir = {"" = "."}
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["scirex*"]
+
 
 [tool.pytest.ini_options]
 minversion = "7.0"
