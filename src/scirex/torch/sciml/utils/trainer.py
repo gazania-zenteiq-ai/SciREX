@@ -1,3 +1,7 @@
+"""
+Training utilities for SciML models on Navier-Stokes super-resolution task.
+Includes training loop with physics-informed loss.
+"""
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt

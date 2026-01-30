@@ -1,3 +1,9 @@
+"""
+This file is used to evaluate trained models on the Navier-Stokes super-resolution task.
+It computes metrics like MSE, MAE, RMSE and visualizes predictions from different models
+
+"""
+
 import torch
 import torch.nn.functional as F
 import numpy as np

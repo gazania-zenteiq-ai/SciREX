@@ -1,3 +1,7 @@
+"""
+PhysicsLoss: Implements physics-informed loss for Navier-Stokes equations in 2D using vorticity formulation.
+
+"""
 import torch
 import torch.nn as nn
 import torch.fft
