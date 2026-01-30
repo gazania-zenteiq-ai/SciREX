@@ -4,6 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+# from ..models.fno.bicubic_fno import BicubicFNO 
+# Define models to evaluate
+# model_vanilla = BicubicFNO(modes1=12, modes2=12, width=32)
+# model_physics = BicubicFNO(modes1=12, modes2=12, width=32)  
+
+
 def evaluate_models(models, model_names, val_loader, device='cuda'):
     """
     Evaluate multiple models and compute metrics
@@ -61,11 +67,6 @@ def evaluate_models(models, model_names, val_loader, device='cuda'):
     return results
 
 
-# Now evaluate all models
-print("\n" + "="*60)
-print("EVALUATING ALL MODELS")
-print("="*60)
-
 # Load best models
 model_vanilla.load_state_dict(torch.load('bicubic_fno_vanilla_best.pth')['model_state_dict'])
 model_physics.load_state_dict(torch.load('bicubic_fno_physics_best.pth')['model_state_dict'])
@@ -77,9 +78,6 @@ model_names = ['Bicubic', 'Bicubic+FNO', 'Bicubic+FNO+Physics']
 results = evaluate_models(models, model_names, val_loader, device)
 
 # Print metrics
-print("\n" + "="*60)
-print("EVALUATION METRICS")
-print("="*60)
 for name in model_names:
     print(f"\n{name}:")
     print(f"  MSE:  {results[name]['mse']:.6f}")
@@ -170,10 +168,6 @@ def visualize_comparison(results, sample_idx=0):
     plt.show()
 
 # Visualize multiple samples
-print("\n" + "="*60)
-print("GENERATING VISUALIZATIONS")
-print("="*60)
-
 for i in range(min(3, len(results['Bicubic']['predictions']))):
     print(f"Visualizing sample {i}...")
     visualize_comparison(results, sample_idx=i)
