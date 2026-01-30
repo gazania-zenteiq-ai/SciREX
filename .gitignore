@@ -84,3 +84,9 @@ output/
 
 results.png
 lib64
+
+
+# ignore .mat .py
+
+*.mat
+*.npy
