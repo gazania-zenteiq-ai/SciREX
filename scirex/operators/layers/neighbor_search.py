@@ -21,7 +21,7 @@ class NeighborSearch:
             Dict containing:
             - neighbor_indices: (N, K) boolean mask where valid neighbors = True
             - mask: (N, K) boolean mask where valid neighbors = True
-            - distances: (N, K) (optional) padded with 0
+            - weights: (N, K) (optional) padded with 0
         """
         if queries is None:
             queries = points
@@ -62,6 +62,6 @@ class NeighborSearch:
         }
         
         if self.return_norm:
-            out["distances"] = actual_dists
+            out["weights"] = actual_dists
             
         return out

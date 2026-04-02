@@ -42,8 +42,8 @@ def test_neighbor_search_radius_mask():
     assert mask[1] == False
     assert indices[1] == -1  # Padded element
 
-def test_neighbor_search_with_distance():
-    """Should return distances when return_norm=True."""
+def test_neighbor_search_with_weights():
+    """Should return weights when return_norm=True."""
     data = jnp.array([
         [0.0, 0.0],
         [3.0, 4.0],  # distance = 5
@@ -54,10 +54,10 @@ def test_neighbor_search_with_distance():
     model = NeighborSearch(max_neighbors=2, return_norm=True)
     out = model(points=data, queries=queries, radius=10.0)
     
-    dists = out["distances"][0]
-    assert dists.shape == (2,)
-    assert jnp.all(dists >= 0)
-    assert jnp.isclose(dists[1], 5.0)
+    weights = out["weights"][0]
+    assert weights.shape == (2,)
+    assert jnp.all(weights >= 0)
+    assert jnp.isclose(weights[1], 5.0)
 
 def test_neighbor_search_pad_if_less_than_k():
     """Should pad with -1 if total points < K."""
@@ -72,7 +72,7 @@ def test_neighbor_search_pad_if_less_than_k():
     
     indices = out["neighbor_indices"][0]
     mask = out["mask"][0]
-    distances = out["distances"][0]
+    weights = out["weights"][0]
     
     assert indices.shape == (3,)
     assert mask.shape == (3,)
@@ -82,11 +82,11 @@ def test_neighbor_search_pad_if_less_than_k():
     
     assert indices[1] == -1
     assert mask[1] == False
-    assert distances[1] == 0.0
+    assert weights[1] == 0.0
     
     assert indices[2] == -1
     assert mask[2] == False
-    assert distances[2] == 0.0
+    assert weights[2] == 0.0
 
 def test_neighbor_search_jit():
     """NeighborSearch should be JIT compatible."""

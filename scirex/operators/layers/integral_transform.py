@@ -115,7 +115,7 @@ class IntegralTransform(nn.Module):
             rep = rep * mask_val
 
         # 4. Handle weights
-        nbr_weights = neighbors.get("distances")
+        nbr_weights = neighbors.get("weights")
         if nbr_weights is None:
             nbr_weights = weights
 

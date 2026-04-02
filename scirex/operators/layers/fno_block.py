@@ -61,7 +61,12 @@ class FNOBlock(nn.Module):
     channel_mlp_expansion: float = 0.5
 
     @nn.compact
-    def __call__(self, x: jnp.ndarray, is_last: bool = False) -> jnp.ndarray:
+    def __call__(
+        self, 
+        x: jnp.ndarray, 
+        is_last: bool = False, 
+        ada_in_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None # (scale, shift)
+    ) -> jnp.ndarray:
         # Step 1: Global feature extraction via Spectral Convolution
         y_s = SpectralConv(
             in_channels=self.hidden_channels, 
@@ -79,13 +84,19 @@ class FNOBlock(nn.Module):
         # Step 3: Branch fusion and stabilization
         x_block = y_s + y_p
         
-        if self.use_norm:
+        if self.use_norm or ada_in_params is not None:
+            # Apply InstanceNorm before applying adaptive scale/shift
             x_block = nn.InstanceNorm()(x_block)
+            if ada_in_params is not None:
+                scale, shift = ada_in_params
+                # Reshape for broadcasting over spatial dimensions
+                for _ in range(x.ndim - 2):
+                    scale = jnp.expand_dims(scale, 1)
+                    shift = jnp.expand_dims(shift, 1)
+                x_block = x_block * (1.0 + scale) + shift
         
         # Internal activation (always applied between branches)
         # neuraloperator logic: apply activation BEFORE ChannelMLP 
-        # (but skip it on the very last block IF not using MLP? 
-        # Actually neuralop skips it on last block regardless of MLP)
         if not is_last:
             x_block = self.activation(x_block)
 

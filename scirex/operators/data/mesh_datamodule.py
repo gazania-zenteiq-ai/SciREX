@@ -97,7 +97,7 @@ class MeshDataModule:
         }
 
         # 3. Process items
-        print(f"Processing geometry and computing distances for {len(meshes)} items...")
+        print(f"Processing geometry and computing weights for {len(meshes)} items...")
         self.data: List[Dict[str, np.ndarray]] = []
         
         # We also want to cache distances, normals, etc. 
@@ -275,7 +275,7 @@ class MeshDataModule:
         return {
             "neighbor_indices": np.where(mask, i, -1).astype(np.int32),
             "mask": mask.astype(np.float32),
-            "distances": np.where(mask, d, 0.0).astype(np.float32)
+            "weights": np.where(mask, d, 0.0).astype(np.float32)
         }
 
     def get_batch(self, split="train", batch_size=1, shuffle=True):
