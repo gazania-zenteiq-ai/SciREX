@@ -1,3 +1,4 @@
+scirex/operators/data/
 *.sh
 # pycache
 __pycache__/
