@@ -19,8 +19,7 @@ from copy import deepcopy
 
 import jax 
 import jax.numpy as jnp 
-from scirex.data.datasets.car_cfd_dataset_jax import CarCFDDatasetjax
-from scirex.configs.gino_carcfd_config import Config
+from scirex.operators.data.datasets.car_cfd_dataset_jax import CarCFDDatasetjax
 
 # query points is [sdf_query_resolution] * 3 (taken from config ahmed)
 # Read the configuration
