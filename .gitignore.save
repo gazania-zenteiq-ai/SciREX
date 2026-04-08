@@ -1,0 +1,108 @@
+scirex/operators/data/*.sh
+# pycache
+__pycache__/
+fastvpinns.egg-info
+*.pyc
+
+# tests/test_dump
+test_dump/
+
+# build
+build/
+
+# dist
+dist/
+
+# docs build
+docs/_build/
+site/
+
+# add vtk and mesh files
+*.vtk
+*.msh
+
+# Html
+htmlcov/
+
+fastvpinns.egg-info/
+
+data/datasets/darcy 
+
+#ignore output files
+examples/**/output/
+examples/**/output_*
+examples/**/__pycache__/
+
+output/*
+
+experiments/checkpoints
+experiments/results
+experiments/visualization/*
+!experiments/visualization/poisson2d_fno_plot.py
+!experiments/visualization/poisson3d_fno_plot.py
+
+experiments/darcy_wno/*
+
+scirex/operators/data/darcy/*
+scirex/operators/layers/wavelet/*
+scirex/operators/models/wno/*
+
+scirex/losses/tests/*
+
+scripts/darcy/*
+
+# pytest 
+*.vtk
+*.msh
+sensor_points.png
+.egg-info/
+
+#result files
+# examples/**/*.png # as the README.md uses png image files
+examples/**/sensor_points.png
+
+# Optuna files
+*.sqlite3
+*.db
+
+# virtual env
+bin/
+lib/
+lib64/
+include/
+share/
+etc/
+
+# egg-info
+*.egg-info
+*.egg-info/
+
+pyte
+
+# DS_Store
+.DS_Store
+
+#.benchmarks
+.benchmarks/
+
+# .pytest_cache
+.pytest_cache/
+
+pyvenv.cfg
+
+# Any png files within the examples directory
+
+# All png in the root directory
+
+# remove all folders which has output in their name
+output/
+
+results.png
+lib64
+
+
+# ignore .mat .py
+
+*.mat
+*.npy
+

@@ -73,5 +73,17 @@ def create_train_state(
         )
         
     # 3. Create consolidated state
-    state = TrainState.create(apply_fn=model.apply, params=params, tx=tx)
+    state = TrainState.create(
+    apply_fn=lambda params, batch: model.apply(
+        params,
+        batch["input_geom"],
+        batch["latent_queries"],
+        batch["output_queries"],
+        x=batch["x"],
+        neighbors_in=batch["neighbors_in"],
+        neighbors_out=batch["neighbors_out"],
+    ),
+    params=params,
+    tx=tx)
+    
     return state

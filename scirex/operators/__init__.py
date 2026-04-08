@@ -31,11 +31,10 @@ constituents.
 from .layers import (
     ChannelMLP,
     SpectralConv,
-    DomainPadding,
-    GridEmbedding,
-    SkipConnection,
+    SinusoidalEmbedding,
+    skip_connection,
     SoftGating,
-    FNOBlock,
+    FNOBlocks,
     IntegralTransform,
 )
 

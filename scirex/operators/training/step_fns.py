@@ -36,7 +36,7 @@ def train_step(state: TrainState, batch: Dict, loss_fn: Callable) -> Tuple[Train
     loss_fn: callable(preds, targets) -> scalar
     """
     def loss_and_preds(params):
-        preds = state.apply_fn({"params": params}, batch["x"])
+        preds = state.apply_fn({"params": params}, batch)
         loss = loss_fn(preds, batch["y"])
         return loss, preds
 
@@ -51,6 +51,6 @@ def eval_step(state: TrainState, batch: Dict, loss_fn: Callable) -> Dict:
     """
     Forward evaluation step.
     """
-    preds = state.apply_fn({"params": state.params}, batch["x"])
+    preds = state.apply_fn({"params": state.params}, batch)
     loss = loss_fn(preds, batch["y"])
     return {"loss": loss, "preds": preds}

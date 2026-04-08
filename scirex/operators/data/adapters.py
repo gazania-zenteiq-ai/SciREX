@@ -1,13 +1,10 @@
 def gino_batch_adapter(sample):
-    """
-    Convert CarCFD sample → SciREX training batch
-    """
-
-    # VERY SIMPLE mapping for now (we refine later)
-    x = sample["vertices"]        # input
-    y = sample["press"].squeeze() #arget
-
     return {
-        "x": x,
-        "y": y
+        "input_geom": sample["vertices"][None, ...],
+        "latent_queries": sample["query_points"][None, ...],
+        "output_queries": sample["vertices"][None, ...],
+        "x": sample["distance"][None, ...],
+        "y": sample["press"].squeeze(),
+        "neighbors_in": sample["neighbors_in"],
+        "neighbors_out": sample["neighbors_out"],
     }

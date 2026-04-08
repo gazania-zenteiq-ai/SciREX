@@ -7,7 +7,6 @@ import jax.numpy as jnp
 import flax.linen as nn
 from typing import Any, Optional, Callable
 
-from .base_model_jax import BaseModel
 
 from ..layers.channel_mlp_jax import ChannelMLP
 from ..layers.embeddings_jax import SinusoidalEmbedding
@@ -17,7 +16,7 @@ from ..layers.gno_block_jax import GNOBlock
 from ..layers.gno_weighting_functions_jax import dispatch_weighting_fn
 
 
-class GINO(BaseModel, name="gino"):
+class GINO(nn.Module):
     """
     GINO: Geometry-informed Neural Operator - learns a mapping between
     functions presented over arbitrary coordinate meshes. The model carries

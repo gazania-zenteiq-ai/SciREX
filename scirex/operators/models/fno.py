@@ -25,10 +25,10 @@
 from typing import Tuple, Callable, Optional, Literal, Union, List
 from flax import linen as nn
 import jax.numpy as jnp
-from ..layers.channel_mlp import ChannelMLP
-from ..layers.embeddings import GridEmbedding
-from ..layers.padding import DomainPadding
-from ..layers.fno_block import FNOBlock
+from ..layers.channel_mlp_jax import ChannelMLP
+from ..layers.embeddings_jax import GridEmbeddingND
+from ..layers.padding_jax import DomainPadding
+from ..layers.fno_block_jax import FNOBlocks
 
 class FNO(nn.Module):
     """
@@ -104,7 +104,7 @@ class FNO(nn.Module):
         # 1. Positional Embedding (Grid)
         if self.use_grid:
             grid_boundaries = tuple((0.0, 1.0) for _ in range(n_dim))
-            x = GridEmbedding(grid_boundaries=grid_boundaries)(x)
+            x = GridEmbeddingND(grid_boundaries=grid_boundaries)(x)
             
         # 2. Domain Padding (to handle non-periodic conditions)
         if needs_pad:

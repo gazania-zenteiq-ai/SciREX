@@ -9,7 +9,7 @@ from .complex_jax import CGELU, ctanh, ComplexValued
 from .normalization_layers_jax import AdaIN, InstanceNorm, BatchNorm
 from .skip_connections_jax import skip_connection
 from .spectral_convolution_jax import SpectralConv
-from ..utils import validate_scaling_factor
+from ..utils_jax import validate_scaling_factor
 
 
 Number = Union[int, float]
