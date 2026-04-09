@@ -39,7 +39,7 @@ Usage
 
 from dataclasses import dataclass, field
 from typing import Literal
-from configs.models import FNO_Medium2D, FNO_Medium3D, FNO_Large2D
+from config.models import FNO_Medium2D, FNO_Medium3D, FNO_Large2D
 
 
 @dataclass

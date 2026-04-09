@@ -7,6 +7,7 @@ import jax.numpy as jnp
 import flax.linen as nn
 from typing import Any, Optional, Callable
 
+from .base_model_jax import BaseModel
 
 from ..layers.channel_mlp_jax import ChannelMLP
 from ..layers.embeddings_jax import SinusoidalEmbedding
@@ -16,7 +17,7 @@ from ..layers.gno_block_jax import GNOBlock
 from ..layers.gno_weighting_functions_jax import dispatch_weighting_fn
 
 
-class GINO(nn.Module):
+class GINO(BaseModel, name="gino"):
     """
     GINO: Geometry-informed Neural Operator - learns a mapping between
     functions presented over arbitrary coordinate meshes. The model carries
@@ -106,6 +107,9 @@ class GINO(nn.Module):
     fno_decomposition_kwargs: Any = None
     fno_conv_module: Any = SpectralConv
     fno_enforce_hermitian_symmetry: bool = True
+
+    max_neighbors: int = 64
+    use_neighbor_cache: bool = True
 
     def setup(self):
         print('[GINO.setup] Initializing GINO model')
@@ -301,7 +305,7 @@ class GINO(nn.Module):
             )
 
         """The GINO's forward call:
-        Input GNO --> FNOBlocks --> output GNO + projection to output queries.
+        Input GNO --> FNOBlocks --> output GNO + projection Refactor training script for JAX compatibilityto output queries.
 
         Parameters
         ----------
@@ -433,6 +437,7 @@ class GINO(nn.Module):
             Label for the dataset split. Default: "train".
         """
         from pathlib import Path
+        import time
 
         latent_queries = dataset.constant["query_points"]   # shape [d1, d2, d3, 3]
         if hasattr(latent_queries, "numpy"):
@@ -464,8 +469,13 @@ class GINO(nn.Module):
                 return jnp.array(t.detach().cpu().numpy())
             return jnp.array(t)
 
+        # Start total timer
+        total_start_time = time.time()
+        # print(f"\n[PRECOMPUTE NEIGHBORS] Starting precomputation for {split} split ({len(dataset.data_list)} samples)...", flush=True)
+
         try:
             for i, sample in enumerate(dataset.data_list):
+                # sample_start_time = time.time()
                 vertices = _to_jnp(sample["vertices"])   # [n, 3]
 
                 sample["neighbors_in"] = _ns_fn(
@@ -482,6 +492,9 @@ class GINO(nn.Module):
                     radius=self.out_gno_radius,
                     return_norm=return_norm,
                 )
+
+                # sample_elapsed_time = time.time() - sample_start_time
+                # print(f"[PRECOMPUTE NEIGHBORS] Sample {i+1:3d}/{len(dataset.data_list)} done in {sample_elapsed_time:.3f}s", flush=True)
 
                 if log_file is not None:
                     splits_in  = sample["neighbors_in"]["neighbors_row_splits"]
