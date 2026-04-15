@@ -368,7 +368,7 @@ def native_neighbor_search_chunked(data: jnp.ndarray, queries: jnp.ndarray, radi
     print(f"[native_neighbor_search_chunked] Done! Total neighbors: {len(nbr_indices)}", file=sys.stderr)
     return nbr_dict
 
-def native_neighbor_search_chunked_optimized(data: jnp.ndarray, queries: jnp.ndarray, radius: float, return_norm: bool = False, batch_size: int = 1024):
+def native_neighbor_search_chunked_optimized(data: jnp.ndarray, queries: jnp.ndarray, radius: float, return_norm: bool = False, batch_size: int = 2048):
     
     nbr_indices_list = []
     weights_list = []
@@ -433,4 +433,52 @@ def native_neighbor_search_numpy(data, queries, radius: float, return_norm: bool
     if not isinstance(queries, jnp.ndarray):
         queries = jnp.array(queries)
 
-    return native_neighbor_search_chunked_optimized(data, queries, radius, return_norm, batch_size=1024)
+    return native_neighbor_search_chunked_optimized(data, queries, radius, return_norm, batch_size=2048)
+
+import numpy as np
+from scipy.spatial import cKDTree
+
+def kdtree_neighbor_search(data: np.ndarray, queries: np.ndarray, radius: float, return_norm: bool = False):
+    """
+    Lightning-fast O(N log M) neighbor search using Scipy's C++ KD-Tree.
+    Run this eagerly on the CPU inside your data loader.
+    """
+    # 1. Build the KD-Tree on the search space (data)
+    tree = cKDTree(data)
+    
+    # 2. Query the tree for points within the radius
+    # Returns a list of lists containing neighbor indices for each query
+    # neighbor_lists = tree.query_ball_point(queries, r=radius)
+    safe_radius = radius + 1e-6 
+    neighbor_lists = tree.query_ball_point(queries, r=safe_radius)
+    
+    # 3. Format the outputs to match your exact dictionary structure
+    all_indices = []
+    row_splits = [0]
+    current_split = 0
+    all_weights = []
+    
+    for i, nbrs in enumerate(neighbor_lists):
+        n_count = len(nbrs)
+        current_split += n_count
+        row_splits.append(current_split)
+        
+        if n_count > 0:
+            all_indices.extend(nbrs)
+            
+            if return_norm:
+                # Calculate distances only for actual neighbors, saving massive computation
+                q_point = queries[i]
+                d_points = data[nbrs]
+                sq_dists = np.sum((d_points - q_point)**2, axis=-1)
+                all_weights.extend(sq_dists)
+
+    nbr_dict = {
+        "neighbors_index": np.array(all_indices, dtype=np.int32),
+        "neighbors_row_splits": np.array(row_splits, dtype=np.int32)
+    }
+    
+    if return_norm:
+        nbr_dict["weights"] = np.array(all_weights, dtype=np.float32)
+        
+    return nbr_dict

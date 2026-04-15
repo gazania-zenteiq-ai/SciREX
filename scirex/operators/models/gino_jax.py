@@ -1,4 +1,3 @@
-from functools import partial
 import warnings
 
 warnings.filterwarnings("once", category=UserWarning)
@@ -84,7 +83,9 @@ class GINO(BaseModel, name="gino"):
     out_gno_channel_mlp_hidden_layers: Any = (512, 256)
     gno_channel_mlp_non_linearity: Callable = nn.gelu
     gno_use_open3d: bool = True
-    gno_use_torch_scatter: bool = True
+    gno_use_torch_scatter: bool = False
+    max_neighbors: int = 64
+    use_neighbor_cache: bool = True
     out_gno_tanh: Any = None
     fno_resolution_scaling_factor: Any = None
     fno_block_precision: str = "full"
@@ -108,11 +109,8 @@ class GINO(BaseModel, name="gino"):
     fno_conv_module: Any = SpectralConv
     fno_enforce_hermitian_symmetry: bool = True
 
-    max_neighbors: int = 64
-    use_neighbor_cache: bool = True
-
     def setup(self):
-        print('[GINO.setup] Initializing GINO model')
+        # print('[GINO.setup] Initializing GINO model')
 
         fno_hidden_channels = self.fno_hidden_channels
         fno_n_modes = self.fno_n_modes
@@ -437,7 +435,6 @@ class GINO(BaseModel, name="gino"):
             Label for the dataset split. Default: "train".
         """
         from pathlib import Path
-        import time
 
         latent_queries = dataset.constant["query_points"]   # shape [d1, d2, d3, 3]
         if hasattr(latent_queries, "numpy"):
@@ -460,7 +457,7 @@ class GINO(BaseModel, name="gino"):
         # Directly call the standalone neighbor search function —
         # we cannot instantiate nn.Module subclasses (like NeighborSearch) outside
         # of Flax's init/apply lifecycle, and Flax wraps every method on this class.
-        from ..layers.neighbor_search_jax import native_neighbor_search_numpy as _ns_fn
+        from ..layers.neighbor_search_jax import kdtree_neighbor_search as _ns_fn
         return_norm = self.gno_weighting_function is not None
 
         def _to_jnp(t):
@@ -469,8 +466,6 @@ class GINO(BaseModel, name="gino"):
                 return jnp.array(t.detach().cpu().numpy())
             return jnp.array(t)
 
-        # Start total timer
-        total_start_time = time.time()
         # print(f"\n[PRECOMPUTE NEIGHBORS] Starting precomputation for {split} split ({len(dataset.data_list)} samples)...", flush=True)
 
         try:
