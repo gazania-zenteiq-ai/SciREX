@@ -35,3 +35,5 @@ from .embeddings import GridEmbedding
 from .skip_connection import SkipConnection, SoftGating
 from .integral_transform import IntegralTransform
 from .fno_block import FNOBlock
+from .wavelet_conv import WaveletConv
+from .wavelet_block import WaveletBlock
