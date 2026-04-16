@@ -1,95 +1,58 @@
 from typing import Literal
-import importlib
 
+import jax
 import jax.numpy as jnp
 
 
 def segment_csr(
     src: jnp.ndarray,
-    indptr: jnp.ndarray,
-    reduction: Literal["mean", "sum"],
-    use_scatter=True,
+    segment_ids: jnp.ndarray,
+    counts: jnp.ndarray,
+    reduction: Literal["mean", "sum"] = "mean",
+    use_scatter: bool = False,
 ):
-    """segment_csr reduces all entries of a CSR-formatted
-    matrix by summing or averaging over neighbors.
+    """Reduce edge features to node features using pre-padded segment IDs.
 
-    Used to reduce features over neighborhoods
-    in scirex.operators.layers.IntegralTransform
-
-    If use_scatter is set to False or torch_scatter is not
-    properly built, segment_csr falls back to a naive JAX implementation
-
-    Note: the native version is mainly intended for running tests on
-    CPU-only GitHub CI runners to get around a versioning issue.
-    torch_scatter should be installed and built if possible.
+    All inputs have static shapes across batches, making this function fully
+    compatible with ``jax.jit``.
 
     Parameters
     ----------
     src : jnp.ndarray
-        tensor of features for each point
-    indptr : jnp.ndarray
-        splits representing start and end indices
-        of each neighborhood in src
-    reduction : Literal['mean', 'sum']
-        How to reduce a neighborhood. Options: 'mean', 'sum'. If mean,
-        reduce by taking the average of all neighbors. Otherwise take the sum.
-    use_scatter : bool, optional
-        Whether to use torch-scatter.segment_csr. If False, uses native Python reduction, by default True
-
-        .. warning::
-
-            torch-scatter is an optional dependency that conflicts with the newest versions of PyTorch,
-            so you must handle the conflict explicitly in your environment. See :ref:`torch_scatter_dependency`
-            for more information.
+        Edge features, shape ``[max_edges, C]`` or ``[B, max_edges, C]``.
+        Padded edges must map to segment ``n_out`` (they are discarded).
+    segment_ids : jnp.ndarray
+        Integer array ``[max_edges]`` mapping each edge to its output node.
+        Padded edges must have value ``n_out`` so their contribution is dropped.
+    counts : jnp.ndarray
+        Number of real edges per output node, shape ``[n_out]``.
+        ``n_out`` is derived from ``counts.shape[0]`` — a static compile-time
+        constant, which avoids passing a Python int that JAX would trace.
+    reduction : 'mean' or 'sum'
+    use_scatter : bool
+        Ignored — kept so existing callers with ``use_scatter=...`` still work.
     """
     if reduction not in ["mean", "sum"]:
         raise ValueError("reduce must be one of 'mean', 'sum'")
 
-    if importlib.util.find_spec("torch_scatter") is not None and use_scatter:
-        """only import torch_scatter when cuda is available"""
-        import torch_scatter.segment_csr as scatter_segment_csr
+    # n_out is static (shape attribute), safe to use inside jax.jit
+    n_out = counts.shape[0]
 
-        return scatter_segment_csr(src, indptr, reduce=reduction)
-
+    if src.ndim == 3:
+        # batched: [B, max_edges, C]
+        out = jax.vmap(
+            lambda s: jax.ops.segment_sum(s, segment_ids, num_segments=n_out + 1)
+        )(src)
+        out = out[:, :n_out, :]                            # drop dummy segment
+        if reduction == "mean":
+            denom = jnp.maximum(counts, 1).astype(src.dtype)  # [n_out]
+            out = out / denom[None, :, None]
     else:
-        if use_scatter:
-            print(
-                "Warning: use_scatter is True but torch_scatter is not properly built. \
-                  Defaulting to naive JAX implementation"
-            )
-        # if batched, shape [b, n_reps, channels]
-        # otherwise shape [n_reps, channels]
-        if src.ndim == 3:
-            batched = True
-            point_dim = 1
-        else:
-            batched = False
-            point_dim = 0
+        # unbatched: [max_edges, C]
+        out = jax.ops.segment_sum(src, segment_ids, num_segments=n_out + 1)
+        out = out[:n_out]                                  # drop dummy segment
+        if reduction == "mean":
+            denom = jnp.maximum(counts, 1).astype(src.dtype)  # [n_out]
+            out = out / denom[:, None]
 
-        # if batched, shape [b, n_out, channels]
-        # otherwise shape [n_out, channels]
-        output_shape = list(src.shape)
-        n_out = indptr.shape[point_dim] - 1
-        output_shape[point_dim] = n_out
-
-        out = jnp.zeros(output_shape)
-
-        for i in range(n_out):
-            # reduce all indices pointed to in indptr from src into out
-            if batched:
-                from_idx = (slice(None), slice(indptr[0, i], indptr[0, i + 1]))
-                ein_str = "bio->bo"
-                n_nbrs = indptr[0, i + 1] - indptr[0, i]
-                to_idx = (slice(None), i)
-            else:
-                from_idx = slice(indptr[i], indptr[i + 1])
-                ein_str = "io->o"
-                n_nbrs = indptr[i + 1] - indptr[i]
-                to_idx = i
-            src_from = src[from_idx]
-            if n_nbrs > 0:
-                to_reduce = jnp.einsum(ein_str, src_from)
-                if reduction == "mean":
-                    to_reduce = to_reduce / n_nbrs
-                out = out.at[to_idx].add(to_reduce)
-        return out
+    return out

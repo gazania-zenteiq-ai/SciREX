@@ -356,9 +356,17 @@ class FNOBlocks(nn.Module):
 
     @n_modes.setter
     def n_modes(self, n_modes):
-        for i in range(self.n_layers):
-            self.convs[i].n_modes = n_modes
-        self._n_modes = n_modes
+        # convs is only available after setup() has been called
+        try:
+            convs = object.__getattribute__(self, 'convs')
+            for i in range(self.n_layers):
+                convs[i].n_modes = n_modes
+        except AttributeError:
+            pass  # during construction, convs not yet initialized
+        try:
+            object.__setattr__(self, '_n_modes', n_modes)
+        except (AttributeError, TypeError):
+            pass
 
     def get_block(self, indices):
         """Returns a sub-FNO Block layer from the jointly parametrized main block

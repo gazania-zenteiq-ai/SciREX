@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple, Union
 
 from ..utils_jax import validate_scaling_factor
 
+import jax
 import jax.numpy as jnp
 import flax.linen as nn
 
@@ -16,6 +17,33 @@ from .resample_jax import resample
 tl.set_backend("jax")
 use_opt_einsum("optimal")
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+class JAXTuckerTensor:
+    """Lightweight Tucker tensor for JAX — replaces tltorch.TuckerTensor.
+
+    Stores a core tensor and a list of factor matrices as plain JAX arrays.
+    The interface mirrors what ``_contract_tucker`` expects (.core, .factors).
+    """
+
+    def __init__(self, core: jnp.ndarray, factors):
+        self.core    = core
+        self.factors = list(factors)
+
+    @property
+    def shape(self):
+        """Shape of the full (reconstructed) tensor, derived from factor rows."""
+        return tuple(f.shape[0] for f in self.factors)
+
+    def __getitem__(self, slices):
+        """Slice the Tucker tensor by slicing each factor matrix's row dimension."""
+        if not isinstance(slices, tuple):
+            slices = (slices,)
+        new_factors = []
+        for i, factor in enumerate(self.factors):
+            s = slices[i] if i < len(slices) else slice(None)
+            new_factors.append(factor[s, :])   # slice rows; keep rank dim intact
+        return JAXTuckerTensor(self.core, new_factors)
 
 
 def _contract_dense(x, weight, separable=False):
@@ -39,7 +67,7 @@ def _contract_dense(x, weight, separable=False):
     if not isinstance(weight, jnp.ndarray):
         weight = weight.to_tensor()
 
-    if x.dtype == jnp.complex32:
+    if x.dtype == jnp.complex64:
         return einsum_complexhalf(eq, x, weight)
     else:
         return tl.einsum(eq, x, weight)
@@ -66,7 +94,7 @@ def _contract_cp(x, cp_weight, separable=False):
     factor_syms += [xs + rank_sym for xs in x_syms[2:]]  # x, y, ...
     eq = f'{x_syms},{rank_sym},{",".join(factor_syms)}->{"".join(out_syms)}'
 
-    if x.dtype == jnp.complex32:
+    if x.dtype == jnp.complex64:
         return einsum_complexhalf(eq, x, cp_weight.weights, *cp_weight.factors)
     else:
         return tl.einsum(eq, x, cp_weight.weights, *cp_weight.factors)
@@ -92,7 +120,7 @@ def _contract_tucker(x, tucker_weight, separable=False):
 
     eq = f'{x_syms},{core_syms},{",".join(factor_syms)}->{"".join(out_syms)}'
 
-    if x.dtype == jnp.complex32:
+    if x.dtype == jnp.complex64:
         return einsum_complexhalf(eq, x, tucker_weight.core, *tucker_weight.factors)
     else:
         return tl.einsum(eq, x, tucker_weight.core, *tucker_weight.factors)
@@ -121,7 +149,7 @@ def _contract_tt(x, tt_weight, separable=False):
         + "".join(out_syms)
     )
 
-    if x.dtype == jnp.complex32:
+    if x.dtype == jnp.complex64:
         return einsum_complexhalf(eq, x, *tt_weight.factors)
     else:
         return tl.einsum(eq, x, *tt_weight.factors)
@@ -143,6 +171,10 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
     -------
     function : (x, weight) -> x * weight in Fourier space
     """
+    # JAX-native Tucker is always contracted factorized (no reconstruction)
+    if isinstance(weight, JAXTuckerTensor):
+        return _contract_tucker
+
     if implementation == "reconstructed":
         if separable:
             return _contract_dense_separable
@@ -249,7 +281,11 @@ class SpectralConv(BaseSpectralConv):
             fixed_rank_modes = [0] if fixed_rank_modes else None
         self._fixed_rank_modes = fixed_rank_modes
 
+        # Use the config factorization (tucker or dense).
+        # CP/TT fall back to dense since only tucker is implemented in JAX.
         factorization = self.factorization if self.factorization is not None else "Dense"
+        if factorization.lower() not in ("dense", "tucker"):
+            factorization = "Dense"
 
         if self.separable:
             if self.in_channels != self.out_channels:
@@ -262,20 +298,40 @@ class SpectralConv(BaseSpectralConv):
         else:
             weight_shape = (self.in_channels, self.out_channels, *self._max_n_modes)
 
-        tensor_kwargs = self.decomposition_kwargs if self.decomposition_kwargs is not None else {}
+        # Create spectral weight tensor as native Flax parameters.
+        # Dense: one complex array of shape weight_shape.
+        # Tucker: core tensor + per-dim factor matrices — 70x smaller than dense.
+        def _cx_init(rng, shape):
+            std = self._init_std
+            return (std * jax.random.normal(rng, shape, dtype=jnp.float32)
+                    + 1j * std * jax.random.normal(rng, shape, dtype=jnp.float32)
+                    ).astype(jnp.complex64)
 
-        # Create/init spectral weight tensor
-        # Note: FactorizedTensor from tltorch is used; weights stored as Flax params via self.param
-        weight_init = FactorizedTensor.new(
-            weight_shape,
-            rank=self.rank,
-            factorization=factorization,
-            fixed_rank_modes=self._fixed_rank_modes,
-            **tensor_kwargs,
-            dtype=jnp.complex64,
-        )
-        weight_init.normal_(0, self._init_std)
-        self.weight = weight_init
+        if factorization.lower() == "dense":
+            self.weight = self.param("weight", _cx_init, weight_shape)
+
+        elif factorization.lower() == "tucker":
+            import math
+            rank = self.rank if isinstance(self.rank, float) else 1.0
+            # Compute per-dimension Tucker ranks
+            tucker_ranks = tuple(max(1, math.ceil(rank * d)) for d in weight_shape)
+
+            # Core tensor
+            self._w_core = self.param("w_core", _cx_init, tucker_ranks)
+
+            # Factor matrices — one per dimension of weight_shape
+            for i, (d, r) in enumerate(zip(weight_shape, tucker_ranks)):
+                setattr(self, f'_w_U{i}', self.param(f'w_U{i}', _cx_init, (d, r)))
+
+            n_dims = len(weight_shape)
+            self.weight = JAXTuckerTensor(
+                self._w_core,
+                [getattr(self, f'_w_U{i}') for i in range(n_dims)],
+            )
+        else:
+            raise ValueError(
+                f"JAX port only supports 'dense' or 'tucker' factorization, got '{factorization}'"
+            )
 
         self._contract = get_contract_fun(
             self.weight, implementation=self.implementation, separable=self.separable
@@ -401,7 +457,7 @@ class SpectralConv(BaseSpectralConv):
 
         slices_x = tuple(slices_x)
         out_fft = out_fft.at[slices_x].set(
-            self._contract(x[slices_x], weight, separable=self.separable)
+            self._contract(x[slices_x], weight, separable=self.separable).astype(out_fft.dtype)
         )
 
         if self._resolution_scaling_factor is not None and output_shape is None:
@@ -422,12 +478,14 @@ class SpectralConv(BaseSpectralConv):
 
                 # Enforce Hermitian symmetry conditions for irfft
                 # 0th frequency must be real
-                out_fft = out_fft.at[..., 0].set(out_fft[..., 0].real + 0j)
-
+                # out_fft = out_fft.at[..., 0].set(out_fft[..., 0].real + 0j)
+                out_fft = out_fft.at[..., 0].set((out_fft[..., 0].real + 0j).astype(out_fft.dtype))
+                
                 # Nyquist frequency must be real if the spatial size is even
                 if mode_sizes[-1] % 2 == 0:
-                    out_fft = out_fft.at[..., -1].set(out_fft[..., -1].real + 0j)
-
+                    # out_fft = out_fft.at[..., -1].set(out_fft[..., -1].real + 0j)
+                    out_fft = out_fft.at[..., -1].set((out_fft[..., -1].real + 0j).astype(out_fft.dtype))
+                    
                 x = jnp.fft.irfft(out_fft, n=mode_sizes[-1], axis=fft_dims[-1], norm=self.fft_norm)
             else:
                 x = jnp.fft.irfftn(out_fft, s=mode_sizes, axes=fft_dims, norm=self.fft_norm)

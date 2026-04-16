@@ -39,7 +39,7 @@ class GNOBlock(nn.Module):
         Radius in which to search for neighbors
     weighting_fn : Callable, optional
         Optional squared-norm weighting function to use for Mollified GNO layer
-        by default None. See scirex.operators.layers.gno_weighting_functions for more details.
+        by default None. See neuralop.layers.gno_weighting_functions for more details.
     reduction : Literal['sum', 'mean']
         Whether to aggregate information from each neighborhood in the
         integral transform by summing ('sum') or averaging ('mean'), by default 'sum'
@@ -57,7 +57,7 @@ class GNOBlock(nn.Module):
         by default independently of this parameter, by default 'linear'
     pos_embedding_type: literal {'transformer', 'nerf'} | None, optional
         Type of positional embedding to use during the kernel integral transform.
-        Options: 'transformer', 'nerf', None. See `scirex.operators.layers.embeddings.SinusoidalEmbedding` for more details, by default 'transformer'
+        Options: 'transformer', 'nerf', None. See `neuralop.layers.embeddings.SinusoidalEmbedding` for more details, by default 'transformer'
     pos_embedding_channels : int, optional
         Per-channel dimension of optional positional embedding to use, by default 32
     pos_embedding_max_positions: int, optional
@@ -78,7 +78,7 @@ class GNOBlock(nn.Module):
         Default None, by default None
     use_torch_scatter_reduce : bool, optional
         Whether to use torch-scatter to perform grouped reductions in the IntegralTransform.
-        If False, uses native Python reduction in scirex.operators.layers.segment_csr, by default True
+        If False, uses native Python reduction in neuralop.layers.segment_csr, by default True
 
         .. warning::
 
@@ -112,7 +112,7 @@ class GNOBlock(nn.Module):
     channel_mlp_layers: Any = None  # List[int], default [128, 256, 128]
     channel_mlp_non_linearity: Callable = nn.gelu
     channel_mlp: Any = None
-    use_torch_scatter_reduce: bool = True
+    use_torch_scatter_reduce: bool = False
     use_open3d_neighbor_search: bool = True
 
     def setup(self):
@@ -165,6 +165,7 @@ class GNOBlock(nn.Module):
                 f"but got {channel_mlp.in_channels}."
             )
         elif channel_mlp_layers is not None:
+            channel_mlp_layers = list(channel_mlp_layers)
             if channel_mlp_layers[0] != kernel_in_dim:
                 channel_mlp_layers = [kernel_in_dim] + channel_mlp_layers
             if channel_mlp_layers[-1] != self.out_channels:
