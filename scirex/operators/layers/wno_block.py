@@ -41,7 +41,7 @@ def mish(x: jnp.ndarray) -> jnp.ndarray:
     return x * jnp.tanh(nn.softplus(x))
 
 
-class WaveletBlock(nn.Module):
+class WNOBlock(nn.Module):
     """
     N-dimensional Wavelet Neural Operator (WNO) block.
 

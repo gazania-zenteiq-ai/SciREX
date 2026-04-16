@@ -30,7 +30,7 @@ from flax import linen as nn
 from ..layers.channel_mlp import ChannelMLP
 from ..layers.embeddings import GridEmbedding
 from ..layers.padding import DomainPadding
-from ..layers.wavelet_block import WaveletBlock, mish
+from ..layers.wno_block import WNOBlock, mish
 
 
 class WNO(nn.Module):
@@ -94,15 +94,14 @@ class WNO(nn.Module):
             activation=self.activation,
         )(x)
 
-        for layer_idx in range(self.n_layers):
-            block_activation = self.activation if layer_idx < self.n_layers - 1 else None
-            x = WaveletBlock(
+        for _ in range(self.n_layers):
+            x = WNOBlock(
                 hidden_channels=self.hidden_channels,
                 level=self.level,
                 size=self.size,
                 wavelet=self.wavelet,
                 mode=self.mode,
-                activation=block_activation,
+                activation=self.activation,
                 skip_type=self.skip_type,
             )(x)
 

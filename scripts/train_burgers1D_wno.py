@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 
-from configs.burgers_mat_wno_config import BurgersMatWNO1DConfig
+from configs.burgers_wno1d_config import BurgersWNO1DConfig
 
 def load_burgers_mat(mat_path: str, n_train: int, n_test: int):
     import scipy.io
@@ -82,7 +82,7 @@ from scirex.operators.models.wno import WNO
 from scirex.operators.training import GaussianNormalizer, create_train_state
 
 
-def make_schedule(config: BurgersMatWNO1DConfig, steps_per_epoch: int):
+def make_schedule(config: BurgersWNO1DConfig, steps_per_epoch: int):
     total_steps = max(config.epochs * steps_per_epoch, 1)
     warmup_steps = min(max(total_steps // 20, 1), 500)
     cosine_steps = max(total_steps - warmup_steps, 1)
@@ -112,7 +112,7 @@ def plot_loss_curves(history: dict, save_path: str) -> None:
 
 
 def main() -> None:
-    config = BurgersMatWNO1DConfig()
+    config = BurgersWNO1DConfig()
 
     rng = jax.random.PRNGKey(config.seed)
     rng, init_rng = jax.random.split(rng)

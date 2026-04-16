@@ -22,38 +22,21 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""Experiment config for WNO2D on the original Darcy MATLAB benchmark."""
-
-import os
 from dataclasses import dataclass
 
-
-def _default_darcy_path(filename: str) -> str:
-    """Prefer local Darcy copies before falling back to repo data folders."""
-    home = os.path.expanduser("~")
-    candidates = [
-        os.path.join(home, "Downloads", "darcy_421", filename),
-        os.path.join(home, "Downloads", "Darcy_421", filename),
-        os.path.join("scirex", "operators", "data", "Darcy_421", filename),
-        os.path.join("scirex", "operators", "data", "wno_data", filename),
-    ]
-    for path in candidates:
-        if os.path.exists(path):
-            return path
-    return candidates[0]
-
-
 @dataclass
-class DarcyMatWNO2DConfig:
-    # Dataset
-    train_path: str = _default_darcy_path("piececonst_r421_N1024_smooth1.mat")
-    test_path: str = _default_darcy_path("piececonst_r421_N1024_smooth2.mat")
-    n_train: int = 1000
+class BurgersWNO1DConfig:
+    """Configuration for WNO1D on Burgers dataset in .mat format."""
+    train_path: str = "scirex/operators/data/burgers_data_512_51.mat"
+    
+    n_train: int = 400
     n_test: int = 100
-    subsample_rate: int = 5
-
-    # Model
-    hidden_channels: int = 64
+    batch_size: int = 20
+    epochs: int = 100
+    learning_rate: float = 1e-3
+    weight_decay: float = 1e-4
+    
+    hidden_channels: int = 32
     n_layers: int = 4
     level: int = 4
     wavelet: str = "db4"
@@ -62,15 +45,8 @@ class DarcyMatWNO2DConfig:
     lifting_channel_ratio: int = 2
     projection_channel_ratio: int = 2
     skip_type: str = "linear"
-
-    # Training
-    batch_size: int = 20
-    epochs: int = 100
-    learning_rate: float = 1e-3
-    weight_decay: float = 1e-4
+    
     encode_input: bool = True
     encode_output: bool = True
     seed: int = 42
-
-    # Outputs
-    run_name: str = "darcy2d_wno"
+    run_name: str = "burgers1d_wno"

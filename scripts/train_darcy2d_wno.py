@@ -44,14 +44,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 
-from configs.darcy_mat_wno_config import DarcyMatWNO2DConfig
+from configs.darcy_wno2d_config import DarcyWNO2DConfig
 from scirex.operators.data.darcy_mat import load_darcy_mat
 from scirex.operators.losses import lp_loss
 from scirex.operators.models.wno import WNO
 from scirex.operators.training import GaussianNormalizer, create_train_state
 
 
-def make_schedule(config: DarcyMatWNO2DConfig, steps_per_epoch: int):
+def make_schedule(config: DarcyWNO2DConfig, steps_per_epoch: int):
     total_steps = max(config.epochs * steps_per_epoch, 1)
     warmup_steps = min(max(total_steps // 20, 1), 500)
     cosine_steps = max(total_steps - warmup_steps, 1)
@@ -81,7 +81,7 @@ def plot_loss_curves(history: dict, save_path: str) -> None:
 
 
 def main() -> None:
-    config = DarcyMatWNO2DConfig()
+    config = DarcyWNO2DConfig()
 
     rng = jax.random.PRNGKey(config.seed)
     rng, init_rng = jax.random.split(rng)
@@ -109,7 +109,7 @@ def main() -> None:
         f"wavelet={config.wavelet}, level={config.level})..."
     )
     print(
-        f"Loading Darcy MAT data: train={config.train_path}, test={config.test_path}"
+        f"Loading Darcy data: train={config.train_path}, test={config.test_path}"
     )
     print(f"Data shapes: x_train={x_train.shape}, y_train={y_train.shape}")
 

@@ -22,9 +22,33 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Model architectures for Neural Operators.
-"""
+from dataclasses import dataclass
 
-from .fno import FNO
-from .wno import WNO
+@dataclass
+class NSMatWNO2DConfig:
+    """Configuration for WNO2D on Navier-Stokes dataset in .mat format."""
+    train_path: str = "scirex/operators/data/ns_V1e-3_N5000_T50.mat"
+    
+    n_train: int = 1000
+    n_test: int = 200
+    t_in: int = 10          # Number of input time steps
+    t_out: int = 40         # Number of output predicting time steps
+    batch_size: int = 10
+    epochs: int = 100
+    learning_rate: float = 1e-3
+    weight_decay: float = 1e-4
+    
+    hidden_channels: int = 64
+    n_layers: int = 4
+    level: int = 3          # Wavelet level
+    wavelet: str = "db4"
+    mode: str = "symmetric"
+    padding: float = 0.0
+    lifting_channel_ratio: int = 2
+    projection_channel_ratio: int = 2
+    skip_type: str = "linear"
+    
+    encode_input: bool = True
+    encode_output: bool = True
+    seed: int = 42
+    run_name: str = "ns2d_wno"
