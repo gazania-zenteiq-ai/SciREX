@@ -57,6 +57,9 @@ class WNO(nn.Module):
     padding: Union[float, List[float]] = 0.0
     skip_type: Literal["identity", "linear", "soft-gating"] = "linear"
     activation: Callable = mish
+    projection_activation: Callable = nn.gelu
+    n_lifting_layers: int = 2
+    n_projection_layers: int = 2
 
     @nn.compact
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
@@ -90,30 +93,31 @@ class WNO(nn.Module):
         x = ChannelMLP(
             out_channels=self.hidden_channels,
             hidden_channels=lifting_hidden,
-            n_layers=2,
+            n_layers=self.n_lifting_layers,
             activation=self.activation,
         )(x)
 
-        for _ in range(self.n_layers):
+        for i in range(self.n_layers):
+            block_activation = self.activation if i < self.n_layers - 1 else None
             x = WNOBlock(
                 hidden_channels=self.hidden_channels,
                 level=self.level,
                 size=self.size,
                 wavelet=self.wavelet,
                 mode=self.mode,
-                activation=self.activation,
+                activation=block_activation,
                 skip_type=self.skip_type,
             )(x)
+
+        if needs_pad:
+            x = pad_layer(x, inverse=True, original_shape=original_shape)
 
         projection_hidden = self.hidden_channels * self.projection_channel_ratio
         x = ChannelMLP(
             out_channels=self.out_channels,
             hidden_channels=projection_hidden,
-            n_layers=2,
-            activation=self.activation,
+            n_layers=self.n_projection_layers,
+            activation=self.projection_activation,
         )(x)
-
-        if needs_pad:
-            x = pad_layer(x, inverse=True, original_shape=original_shape)
 
         return x
