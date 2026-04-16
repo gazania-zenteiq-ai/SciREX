@@ -53,7 +53,7 @@ class DarcyMatWNO2DConfig:
     subsample_rate: int = 5
 
     # Model
-    hidden_channels: int = 32
+    hidden_channels: int = 64
     n_layers: int = 4
     level: int = 4
     wavelet: str = "db4"
@@ -65,7 +65,7 @@ class DarcyMatWNO2DConfig:
 
     # Training
     batch_size: int = 20
-    epochs: int = 150
+    epochs: int = 100
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
     encode_input: bool = True

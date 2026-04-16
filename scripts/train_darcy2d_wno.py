@@ -23,18 +23,6 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Train SciREX WNO2D on the original Darcy Flow MATLAB benchmark.
-
-Operator:   a(x,y) ──WNO2D──> u(x,y)
-Dataset:    piececonst_r421_N1024_smooth1.mat / piececonst_r421_N1024_smooth2.mat
-
-Run:
-    python scripts/train_darcy2d_wno.py
-    python scripts/train_darcy2d_wno.py --epochs 5 --n-train 100 --n-test 20
-"""
-
-import argparse
 import json
 import os
 import sys
@@ -63,84 +51,7 @@ from scirex.operators.models.wno import WNO
 from scirex.operators.training import GaussianNormalizer, create_train_state
 
 
-def parse_args(config: DarcyMatWNO2DConfig) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Train SciREX WNO on the original Darcy 2D .mat dataset."
-    )
-    parser.add_argument("--train-path", type=str, default=config.train_path)
-    parser.add_argument("--test-path", type=str, default=config.test_path)
-    parser.add_argument("--n-train", type=int, default=config.n_train)
-    parser.add_argument("--n-test", type=int, default=config.n_test)
-    parser.add_argument("--subsample-rate", type=int, default=config.subsample_rate)
-    parser.add_argument("--batch-size", type=int, default=config.batch_size)
-    parser.add_argument("--epochs", type=int, default=config.epochs)
-    parser.add_argument("--learning-rate", type=float, default=config.learning_rate)
-    parser.add_argument("--weight-decay", type=float, default=config.weight_decay)
-    parser.add_argument("--hidden-channels", type=int, default=config.hidden_channels)
-    parser.add_argument("--n-layers", type=int, default=config.n_layers)
-    parser.add_argument("--level", type=int, default=config.level)
-    parser.add_argument("--wavelet", type=str, default=config.wavelet)
-    parser.add_argument("--mode", type=str, default=config.mode)
-    parser.add_argument("--padding", type=float, default=config.padding)
-    parser.add_argument(
-        "--lifting-channel-ratio",
-        type=int,
-        default=config.lifting_channel_ratio,
-    )
-    parser.add_argument(
-        "--projection-channel-ratio",
-        type=int,
-        default=config.projection_channel_ratio,
-    )
-    parser.add_argument(
-        "--skip-type",
-        type=str,
-        default=config.skip_type,
-        choices=["identity", "linear", "soft-gating"],
-    )
-    parser.add_argument(
-        "--encode-input",
-        action=argparse.BooleanOptionalAction,
-        default=config.encode_input,
-    )
-    parser.add_argument(
-        "--encode-output",
-        action=argparse.BooleanOptionalAction,
-        default=config.encode_output,
-    )
-    parser.add_argument("--seed", type=int, default=config.seed)
-    parser.add_argument("--run-name", type=str, default=config.run_name)
-    return parser.parse_args()
-
-
-def apply_overrides(config: DarcyMatWNO2DConfig, args: argparse.Namespace) -> DarcyMatWNO2DConfig:
-    config.train_path = os.environ.get("DARCY_TRAIN_PATH", args.train_path)
-    config.test_path = os.environ.get("DARCY_TEST_PATH", args.test_path)
-    config.n_train = args.n_train
-    config.n_test = args.n_test
-    config.subsample_rate = int(os.environ.get("DARCY_SUBSAMPLE_RATE", args.subsample_rate))
-    config.batch_size = args.batch_size
-    config.epochs = args.epochs
-    config.learning_rate = args.learning_rate
-    config.weight_decay = args.weight_decay
-    config.hidden_channels = args.hidden_channels
-    config.n_layers = args.n_layers
-    config.level = args.level
-    config.wavelet = args.wavelet
-    config.mode = args.mode
-    config.padding = args.padding
-    config.lifting_channel_ratio = args.lifting_channel_ratio
-    config.projection_channel_ratio = args.projection_channel_ratio
-    config.skip_type = args.skip_type
-    config.encode_input = args.encode_input
-    config.encode_output = args.encode_output
-    config.seed = args.seed
-    config.run_name = args.run_name
-    return config
-
-
 def make_schedule(config: DarcyMatWNO2DConfig, steps_per_epoch: int):
-    """Linear warmup + cosine decay, matching the previous WNO script behavior."""
     total_steps = max(config.epochs * steps_per_epoch, 1)
     warmup_steps = min(max(total_steps // 20, 1), 500)
     cosine_steps = max(total_steps - warmup_steps, 1)
@@ -154,7 +65,6 @@ def make_schedule(config: DarcyMatWNO2DConfig, steps_per_epoch: int):
 
 
 def plot_loss_curves(history: dict, save_path: str) -> None:
-    """Semi-log plot of train and test relative L2 vs epoch."""
     fig, ax = plt.subplots(figsize=(8, 5))
     epochs = range(len(history["train_rel_l2"]))
     ax.semilogy(epochs, history["train_rel_l2"], lw=2, label="Train Rel-L2")
@@ -171,13 +81,11 @@ def plot_loss_curves(history: dict, save_path: str) -> None:
 
 
 def main() -> None:
-    # ── 1. Config ─────────────────────────────────────────────────────────────
-    config = apply_overrides(DarcyMatWNO2DConfig(), parse_args(DarcyMatWNO2DConfig()))
+    config = DarcyMatWNO2DConfig()
 
     rng = jax.random.PRNGKey(config.seed)
     rng, init_rng = jax.random.split(rng)
 
-    # ── 2. Data ───────────────────────────────────────────────────────────────
     x_train, y_train, x_test, y_test = load_darcy_mat(
         train_path=config.train_path,
         test_path=config.test_path,
@@ -205,7 +113,6 @@ def main() -> None:
     )
     print(f"Data shapes: x_train={x_train.shape}, y_train={y_train.shape}")
 
-    # ── 3. Normalisation ──────────────────────────────────────────────────────
     x_norm = GaussianNormalizer(x_train_jnp) if config.encode_input else None
     y_norm = GaussianNormalizer(y_train_jnp) if config.encode_output else None
 
@@ -214,7 +121,6 @@ def main() -> None:
     x_te = x_norm.encode(x_test_jnp) if x_norm else x_test_jnp
     test_batch_enc = {"x": x_te, "y": y_norm.encode(y_test_jnp) if y_norm else y_test_jnp}
 
-    # ── 4. Model ──────────────────────────────────────────────────────────────
     model = WNO(
         hidden_channels=config.hidden_channels,
         n_layers=config.n_layers,
@@ -230,7 +136,6 @@ def main() -> None:
         skip_type=config.skip_type,
     )
 
-    # ── 5. Optimiser / schedule ───────────────────────────────────────────────
     steps_per_epoch = max(n_train_actual // config.batch_size, 1)
     total_steps = config.epochs * steps_per_epoch
     schedule = make_schedule(config, steps_per_epoch)
@@ -246,7 +151,6 @@ def main() -> None:
         tx=tx,
     )
 
-    # ── 6. Paths ──────────────────────────────────────────────────────────────
     ckpt_dir = os.path.join(PROJECT_ROOT, "experiments", "checkpoints")
     os.makedirs(ckpt_dir, exist_ok=True)
     ckpt_path = os.path.join(ckpt_dir, f"{config.run_name}_best.msgpack")
@@ -263,7 +167,6 @@ def main() -> None:
     best_test_rel_l2 = float("inf")
     history = {"train_rel_l2": [], "test_rel_l2": []}
 
-    # ── 7. JIT train / eval steps ─────────────────────────────────────────────
     @jax.jit
     def train_step(state, batch):
         def loss_fn(params):
@@ -273,7 +176,6 @@ def main() -> None:
         loss, grads = jax.value_and_grad(loss_fn)(state.params)
         return state.apply_gradients(grads=grads), {"loss": loss}
 
-    # ── 8. Training loop ──────────────────────────────────────────────────────
     print(f"Starting training for {config.epochs} epochs ({total_steps} steps)...")
     rng_key = jax.random.PRNGKey(config.seed + 1)
     total_start_time = time.time()
@@ -290,7 +192,9 @@ def main() -> None:
         for step in range(steps_per_epoch):
             start = step * config.batch_size
             end = start + config.batch_size
-            state, metrics = train_step(state, {"x": x_shuf[start:end], "y": y_shuf[start:end]})
+            state, metrics = train_step(
+                state, {"x": x_shuf[start:end], "y": y_shuf[start:end]}
+            )
             epoch_loss += float(metrics["loss"])
 
         avg_train = epoch_loss / steps_per_epoch
@@ -321,7 +225,6 @@ def main() -> None:
     print(f"\nTraining Complete. Best Test Rel L2: {best_test_rel_l2:.6f}")
     print(f"Total training time: {total_time:.2f}s ({total_time/60:.2f}m)")
 
-    # ── 9. Load best checkpoint for final evaluation ──────────────────────────
     with open(ckpt_path, "rb") as fp:
         best_params = flax.serialization.from_bytes(state.params, fp.read())
 
@@ -337,11 +240,8 @@ def main() -> None:
     y_test_np = np.array(y_test_jnp)
     diff_all = (y_pred_np - y_test_np).reshape(n_test_actual, -1)
     targ_all = y_test_np.reshape(n_test_actual, -1)
-    rel_l2_all = np.linalg.norm(diff_all, axis=1) / (
-        np.linalg.norm(targ_all, axis=1) + 1e-8
-    )
+    _ = np.linalg.norm(diff_all, axis=1) / (np.linalg.norm(targ_all, axis=1) + 1e-8)
 
-    # ── 10. Plots ─────────────────────────────────────────────────────────────
     plot_loss_curves(history, loss_plot_path)
     print(f"Loss curves saved to: {results_dir}")
 
