@@ -17,6 +17,36 @@ try:
 except ModuleNotFoundError:
     o3d_warn = True
 
+
+class _LazyLoader:
+    """Lazy data loader that builds each batch on demand.
+
+    Batches are constructed only during iteration, so no GPU memory is
+    consumed at construction time. ``batch_size=1`` is assumed for dict-
+    valued keys such as ``neighbors_in`` / ``neighbors_out``.
+    """
+
+    def __init__(self, data, index_groups):
+        self._data = data
+        self._index_groups = index_groups
+        # Expose a minimal `.dataset` object so the trainer can call len()
+        _n = len(index_groups)
+        self.dataset = type("Dataset", (), {"__len__": lambda _: _n})()
+
+    def __len__(self):
+        return len(self._index_groups)
+
+    def __iter__(self):
+        for batch_indices in self._index_groups:
+            batch = {}
+            for key in self._data[0].keys():
+                values = [self._data[idx][key] for idx in batch_indices]
+                if isinstance(values[0], dict):
+                    batch[key] = values[0] if len(values) == 1 else values
+                else:
+                    batch[key] = jnp.stack(values)
+            yield batch
+
 # For visualization of meshes and pressure fields
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
@@ -536,7 +566,7 @@ class MeshDataModule:
         return self._create_loader(self.test_data, batch_size, shuffle)
 
     def _create_loader(self, data, batch_size=1, shuffle=False):
-        """Create a simple data loader that yields batches."""
+        """Create a lazy data loader that builds each batch on demand."""
         n_samples = len(data)
         indices = list(range(n_samples))
 
@@ -544,13 +574,5 @@ class MeshDataModule:
             import random
             random.shuffle(indices)
 
-        batches = []
-        for i in range(0, n_samples, batch_size):
-            batch_indices = indices[i:i + batch_size]
-            batch = {
-                key: jnp.stack([data[idx][key] for idx in batch_indices])
-                for key in data[0].keys()
-            }
-            batches.append(batch)
-
-        return batches
+        index_groups = [indices[i:i + batch_size] for i in range(0, n_samples, batch_size)]
+        return _LazyLoader(data, index_groups)

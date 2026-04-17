@@ -161,9 +161,6 @@ class GINOConfig(ModelConfig):
     fno_channel_mlp_expansion: float = 1.0
     fno_resolution_scaling_factor: int = 1
 
-    max_neighbors: int = 64
-    use_neighbor_cache: bool = True
-
 
 class GINO_Small3d(GINOConfig):
     in_channels: int = 0  
@@ -209,9 +206,6 @@ class FNOGNOConfig(ModelConfig):
     fno_norm: bool = False
     fno_skip: Literal["identity", "linear", "soft-gating"] = "linear"
     fno_channel_mlp_skip: Literal["identity", "linear", "soft-gating"] = "soft-gating"
-
-    max_neighbors: int = 64
-    use_neighbor_cache: bool = True
 
 
 class FNOGNO_Small3d(FNOGNOConfig):
