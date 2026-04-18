@@ -43,6 +43,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
+import pickle
 
 from configs.darcy_wno2d_config import DarcyWNO2DConfig
 from scirex.operators.data.darcy_mat import load_darcy_mat
@@ -166,6 +167,13 @@ def main() -> None:
 
     best_test_rel_l2 = float("inf")
     history = {"train_rel_l2": [], "test_rel_l2": []}
+    
+    # Evolution tracking for animation
+    evolution = {
+        "ground_truth": np.array(y_test_jnp[0, ..., 0]),
+        "predictions": [],
+        "steps": []
+    }
 
     @jax.jit
     def train_step(state, batch):
@@ -220,6 +228,10 @@ def main() -> None:
             )
             with open(metrics_path, "w", encoding="ascii") as fp:
                 json.dump(history, fp, indent=2)
+            
+            # Save evolution frame
+            evolution["predictions"].append(np.array(pred_dec[0, ..., 0]))
+            evolution["steps"].append(epoch)
 
     total_time = time.time() - total_start_time
     print(f"\nTraining Complete. Best Test Rel L2: {best_test_rel_l2:.6f}")
@@ -243,6 +255,13 @@ def main() -> None:
     _ = np.linalg.norm(diff_all, axis=1) / (np.linalg.norm(targ_all, axis=1) + 1e-8)
 
     plot_loss_curves(history, loss_plot_path)
+    
+    # Save evolution data
+    evo_path = os.path.join(results_dir, f"{config.run_name}_evolution.pkl")
+    with open(evo_path, "wb") as f:
+        pickle.dump(evolution, f)
+    print(f"Evolution data saved to: {evo_path}")
+    
     print(f"Loss curves saved to: {results_dir}")
 
 

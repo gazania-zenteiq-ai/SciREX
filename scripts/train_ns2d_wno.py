@@ -43,6 +43,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
+import pickle
 import h5py
 
 from configs.ns_wno2d_config import NSMatWNO2DConfig
@@ -233,6 +234,13 @@ def main() -> None:
     best_test_rel_l2 = float("inf")
     history = {"train_rel_l2": [], "test_rel_l2": []}
 
+    # Evolution tracking for animation (Physical Time)
+    evolution = {
+        "ground_truth": None, # Will be set after training
+        "predictions": None,
+        "steps": None
+    }
+
     if y_norm:
         y_mean = jnp.asarray(y_norm.mean, dtype=jnp.float32)
         y_std = jnp.asarray(y_norm.std, dtype=jnp.float32)
@@ -313,24 +321,30 @@ def main() -> None:
     print(f"Total training time: {total_time:.2f}s ({total_time/60:.2f}m)")
 
     # 8. Checkpoint handling
+    print(f"Loading best checkpoint from {ckpt_path} for inference...")
     with open(ckpt_path, "rb") as fp:
         best_params = flax.serialization.from_bytes(state.params, fp.read())
 
-    y_pred_all = []
-    n_test_actual = x_test.shape[0]
-    for i in range(0, n_test_actual, config.batch_size):
-        chunk = x_te[i : i + config.batch_size]
-        pred_enc = state.apply_fn({"params": best_params}, chunk)
-        pred_dec = y_norm.decode(pred_enc) if y_norm else pred_enc
-        y_pred_all.append(np.array(pred_dec))
-
-    y_pred_np = np.concatenate(y_pred_all, axis=0)
-    y_test_np = np.array(y_test_jnp)
-    diff_all = (y_pred_np - y_test_np).reshape(n_test_actual, -1)
-    targ_all = y_test_np.reshape(n_test_actual, -1)
+    # Inference for trajectory animation
+    sample_idx = 0
+    test_sample_x = x_te[sample_idx:sample_idx+1]
+    pred_enc = state.apply_fn({"params": best_params}, test_sample_x)
+    pred_dec = y_norm.decode(pred_enc) if y_norm else pred_enc
+    
+    # y_test in NS is (N, nx, ny, t_out). 
+    evolution["ground_truth"] = np.array(y_test_jnp[sample_idx]) # (nx, ny, t_out)
+    evolution["predictions"] = np.array(pred_dec[0])             # (nx, ny, t_out)
+    evolution["steps"] = np.arange(evolution["ground_truth"].shape[-1])
     
     # 9. Output curve
     plot_loss_curves(history, loss_plot_path)
+    
+    # Save evolution data
+    evo_path = os.path.join(results_dir, f"{config.run_name}_evolution.pkl")
+    with open(evo_path, "wb") as f:
+        pickle.dump(evolution, f)
+    print(f"Evolution data saved to: {evo_path}")
+    
     print(f"Loss curves saved to: {results_dir}")
 
 if __name__ == "__main__":
