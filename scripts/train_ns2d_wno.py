@@ -43,46 +43,71 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
+import h5py
 
-from configs.burgers_wno1d_config import BurgersWNO1DConfig
-
-def load_burgers_mat(mat_path: str, n_train: int, n_test: int):
-    import scipy.io
-    import numpy as np
-    try:
-        data = scipy.io.loadmat(mat_path)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Could not find MAT file: {mat_path}")
-    
-    sol = data.get('sol')
-    if sol is None:
-        raise KeyError("'sol' key not found in MAT file. Check your MAT file contents.")
-        
-    sol = sol.astype(np.float32)
-    # sol has shape (N, nx, T).
-    
-    x_data = sol[..., 0]   # Initial condition at t=0
-    y_final = sol[..., -1] # Target condition at final t
-        
-    N, nx = x_data.shape
-    grid = np.linspace(0.0, 1.0, nx, dtype=np.float32)
-    
-    x_out = np.stack([x_data, np.tile(grid, (N, 1))], axis=-1)  # (N, nx, 2)
-    y_out = y_final[..., np.newaxis]                            # (N, nx, 1)
-
-    x_train = x_out[:n_train]
-    y_train = y_out[:n_train]
-    # Split test from the end
-    x_test = x_out[-n_test:]
-    y_test = y_out[-n_test:]
-
-    return x_train, y_train, x_test, y_test
+from configs.ns_wno2d_config import NSMatWNO2DConfig
 from scirex.operators.losses import lp_loss
 from scirex.operators.models.wno import WNO
 from scirex.operators.training import GaussianNormalizer, create_train_state
 
+def load_ns_mat(mat_path: str, n_train: int, n_test: int, t_in: int, t_out: int):
+    """
+    Time dimension natively treated as input channels (T_in initial slices -> T_out target slices).
+    """
+    try:
+        f = h5py.File(mat_path, 'r')
+    except Exception as e:
+        raise FileNotFoundError(f"Could not load MAT file (might be truncated or corrupted): {mat_path}\nError: {e}")
+    
+    # h5py reads MATLAB v7.3 arrays dimensionally inverted!
+    # A matlab array 'u' of shape (N, nx, ny, T) loads in h5py as (T, ny, nx, N)
+    u_data = f['u']
+    
+    total_samples = n_train + n_test
+    # To save overhead we directly slice what we need along the lowest dimensions
+    # Shape: (T, ny, nx, N) slices only up to 'total_samples' on the last axis
+    u_raw = np.array(u_data[:, :, :, :total_samples])  
+    u_raw = np.transpose(u_raw, (3, 2, 1, 0)) # Corrects to -> (N, nx, ny, T)
+    
+    N, nx, ny, num_t = u_raw.shape
+    assert num_t >= (t_in + t_out), f"Insufficient time slices {num_t} for requested in:out ratio {t_in}:{t_out}"
+    
+    # Time slice split (T is transformed strictly to a channel tensor axis!)
+    x_data = u_raw[:, :, :, :t_in]                  # (N, nx, ny, t_in)
+    y_data = u_raw[:, :, :, t_in:t_in+t_out]        # (N, nx, ny, t_out)
+    
+    # Grid construction for normalization context
+    gridx = np.linspace(0.0, 1.0, nx)
+    gridy = np.linspace(0.0, 1.0, ny)
+    X, Y = np.meshgrid(gridx, gridy, indexing='ij')
+    
+    X_grid = np.tile(X[np.newaxis, :, :, np.newaxis], (N, 1, 1, 1))
+    Y_grid = np.tile(Y[np.newaxis, :, :, np.newaxis], (N, 1, 1, 1))
+    
+    # Concatenate time frames exactly like spatial grids -> Multi-channel operator inputs
+    # Add a Time coordinate channel (normalized to [0, 1] relative to sequence)
+    # Since we act in 2D, this is a constant channel for now (representing the context of the input block)
+    t_coord = t_in / num_t
+    T_grid = np.full((N, nx, ny, 1), t_coord, dtype=np.float32)
+    
+    x_out = np.concatenate([x_data, X_grid, Y_grid, T_grid], axis=-1)  # (N, nx, ny, t_in + 3)
+    y_out = y_data                                             # (N, nx, ny, t_out)
+    
+    x_out = x_out.astype(np.float32)
+    y_out = y_out.astype(np.float32)
+    
+    x_train = x_out[:n_train]
+    y_train = y_out[:n_train]
+    
+    # Split directly from the end boundaries (to mirror reference papers safely)
+    x_test = x_out[-n_test:]
+    y_test = y_out[-n_test:]
+    
+    f.close()
+    return x_train, y_train, x_test, y_test
 
-def make_schedule(config: BurgersWNO1DConfig, steps_per_epoch: int):
+
+def make_schedule(config: NSMatWNO2DConfig, steps_per_epoch: int):
     total_steps = max(config.epochs * steps_per_epoch, 1)
     warmup_steps = min(max(total_steps // 20, 1), 500)
     cosine_steps = max(total_steps - warmup_steps, 1)
@@ -102,7 +127,7 @@ def plot_loss_curves(history: dict, save_path: str) -> None:
     ax.semilogy(epochs, history["test_rel_l2"], lw=2, ls="--", label="Test Rel-L2")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Relative L2 Error")
-    ax.set_title("WNO 1D Burgers: Convergence")
+    ax.set_title("WNO 2D Navier-Stokes Convergence")
     ax.legend()
     ax.grid(True, which="both", ls="-", alpha=0.4)
     fig.tight_layout()
@@ -112,38 +137,43 @@ def plot_loss_curves(history: dict, save_path: str) -> None:
 
 
 def main() -> None:
-    config = BurgersWNO1DConfig()
+    config = NSMatWNO2DConfig()
 
     rng = jax.random.PRNGKey(config.seed)
     rng, init_rng = jax.random.split(rng)
 
     # 1. Data Loading
-    print(f"Loading Burgers data: train={config.train_path}")
+    print(f"Loading Navier-Stokes Data: train={config.train_path}")
+    print(f"Time slices mode: {config.t_in} input frames mapping -> {config.t_out} prediction frames.")
+    
+    full_train_path = config.train_path if os.path.isabs(config.train_path) else os.path.join(PROJECT_ROOT, config.train_path)
+    
     try:
-        x_train, y_train, x_test, y_test = load_burgers_mat(
-            mat_path=config.train_path,
+        x_train, y_train, x_test, y_test = load_ns_mat(
+            mat_path=full_train_path,
             n_train=config.n_train,
             n_test=config.n_test,
+            t_in=config.t_in,
+            t_out=config.t_out
         )
-    except FileNotFoundError as e:
-        print(f"Data not found: {e}. Please ensure the .mat file is at the specified location.")
+    except Exception as e:
+        print(f"Failed to load dataset: {e}")
         return
 
     n_train_actual = x_train.shape[0]
-    nx = x_train.shape[1]
+    nx, ny = x_train.shape[1], x_train.shape[2]
+    
     in_channels = x_train.shape[-1]
     out_channels = y_train.shape[-1]
 
+    # Convert to jnp
     x_train_jnp = jnp.asarray(x_train)
     y_train_jnp = jnp.asarray(y_train)
     x_test_jnp = jnp.asarray(x_test)
     y_test_jnp = jnp.asarray(y_test)
 
-    print(
-        f"Initializing WNO (hidden_channels={config.hidden_channels}, "
-        f"wavelet={config.wavelet}, level={config.level})..."
-    )
-    print(f"Data shapes: x_train={x_train.shape}, y_train={y_train.shape}")
+    print(f"Initializing WNO (hidden_channels={config.hidden_channels}, wavelet={config.wavelet}, level={config.level})...")
+    print(f"Data mapping shapes: x_train={x_train.shape}, y_train={y_train.shape}")
 
     # 2. Normalization
     x_norm = GaussianNormalizer(x_train_jnp) if config.encode_input else None
@@ -159,7 +189,7 @@ def main() -> None:
         hidden_channels=config.hidden_channels,
         n_layers=config.n_layers,
         level=config.level,
-        size=nx,
+        size=(nx, ny),
         out_channels=out_channels,
         wavelet=config.wavelet,
         mode=config.mode,
@@ -182,7 +212,7 @@ def main() -> None:
     state = create_train_state(
         rng=init_rng,
         model=model,
-        input_shape=(config.batch_size, nx, in_channels),
+        input_shape=(config.batch_size, nx, ny, in_channels),
         tx=tx,
     )
 
@@ -229,7 +259,7 @@ def main() -> None:
         return state.apply_gradients(grads=grads), {"loss": loss, "train_rel_l2": train_metric}
 
     # 7. Training loop
-    print(f"Starting training for {config.epochs} epochs ({total_steps} steps)...")
+    print(f"Starting Navier-Stokes 2D training for {config.epochs} epochs ({total_steps} steps)...")
     rng_key = jax.random.PRNGKey(config.seed + 1)
     total_start_time = time.time()
 
@@ -282,7 +312,7 @@ def main() -> None:
     print(f"\nTraining Complete. Best Test Rel L2: {best_test_rel_l2:.6f}")
     print(f"Total training time: {total_time:.2f}s ({total_time/60:.2f}m)")
 
-    # 8. Checkpoint loading
+    # 8. Checkpoint handling
     with open(ckpt_path, "rb") as fp:
         best_params = flax.serialization.from_bytes(state.params, fp.read())
 
@@ -299,7 +329,7 @@ def main() -> None:
     diff_all = (y_pred_np - y_test_np).reshape(n_test_actual, -1)
     targ_all = y_test_np.reshape(n_test_actual, -1)
     
-    # 9. Plots
+    # 9. Output curve
     plot_loss_curves(history, loss_plot_path)
     print(f"Loss curves saved to: {results_dir}")
 
