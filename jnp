@@ -1,0 +1,4 @@
+Help on function __call__ in module neuralop.losses.data_losses:
+
+____ccaallll____(self, y_pred, y, **kwargs)
+    Call self as a function.

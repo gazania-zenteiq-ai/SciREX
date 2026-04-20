@@ -616,9 +616,21 @@ data_processor = GINOCFDDataProcessor(normalizer=output_encoder, device=config.g
 #     data_module_jax.train_data.data_list, data_processor, chunk_size=10
 # )
 
+
+# Get one REAL batch from loader
+sample = next(iter(train_loader_jax))
+
+# Preprocess it
+sample = data_processor.preprocess(sample)
+
+# Initialize model
+model._init(sample)
+
+
 # Trainer setup
 trainer = Trainer(
     model=model,
+    params=model.params,
     n_epochs=config.opt.n_epochs,
     data_processor=data_processor,
     device=config.get("device", "cpu"),

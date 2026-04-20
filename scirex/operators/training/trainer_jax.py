@@ -7,6 +7,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 from flax import linen as nn
+import optax
 
 # Only import wandb and use if installed
 wandb_available = False
@@ -17,7 +18,7 @@ try:
 except ModuleNotFoundError:
     wandb_available = False
 
-from neuralop.losses import LpLoss
+from neuralop.losses.data_losses_jax import LpLoss
 from .training_state_jax import load_training_state, save_training_state
 import sys
 
@@ -56,6 +57,8 @@ class Trainer:
         model to train
     n_epochs : int
         number of training epochs
+    params : dict, optional
+        model parameters for Flax modules. If None, parameters must be provided to train() or initialized internally.
     wandb_log : bool, default is False
         whether to log results to wandb
     device : str, default 'cpu'
@@ -80,6 +83,7 @@ class Trainer:
         *,
         model: nn.Module,
         n_epochs: int,
+        params=None,
         wandb_log: bool = False,
         device: str = "cpu",
         mixed_precision: bool = False,
@@ -92,6 +96,7 @@ class Trainer:
     ):
         """Initialize Trainer."""
         self.model = model
+        self.params = params
         self.n_epochs = n_epochs
         # only log to wandb if a run is active
         self.wandb_log = False
@@ -116,6 +121,7 @@ class Trainer:
         test_loaders,
         optimizer,
         scheduler,
+        params=None,
         regularizer=None,
         training_loss=None,
         eval_losses=None,
@@ -138,6 +144,8 @@ class Trainer:
             optimizer to use during training
         scheduler : scheduler object
             learning rate scheduler to use during training
+        params : dict, optional
+            model parameters. If provided, overrides self.params
         training_loss : loss function, optional
             cost function to minimize
         eval_losses : dict, optional
@@ -163,6 +171,8 @@ class Trainer:
         """
         self.optimizer = optimizer
         self.scheduler = scheduler
+        if params is not None:
+            self.params = params
         if regularizer:
             self.regularizer = regularizer
         else:
@@ -508,18 +518,15 @@ class Trainer:
         else:
             self.n_samples += 1
 
-        # Model forward pass with gradient update if model supports train_step
-        if hasattr(self.model, 'train_step'):
-            # JAX model: compute loss + gradients + update params in one step
-            loss = self.model.train_step(sample, training_loss)
-        else:
-            # Fallback: plain forward pass (no gradient update — eval only)
-            out = self.model(**sample)
-            if self.epoch == 0 and idx == 0 and self.verbose and hasattr(out, 'shape'):
-                print(f"Raw outputs of shape {out.shape}")
-            if self.data_processor is not None:
-                out, sample = self.data_processor.postprocess(out, sample)
-            loss = training_loss(out, **sample)
+        # Model forward pass (evaluation mode - no gradient update)
+        if self.params is None:
+            raise ValueError("Model parameters must be provided for Flax modules")
+        out = self.model(**sample)
+        if self.epoch == 0 and idx == 0 and self.verbose and hasattr(out, 'shape'):
+            print(f"Raw outputs of shape {out.shape}")
+        if self.data_processor is not None:
+            out, sample = self.data_processor.postprocess(out, sample)
+        loss = training_loss(out, sample['y'])
 
         if self.regularizer:
             loss += self.regularizer.loss if hasattr(self.regularizer, 'loss') else 0.0
@@ -556,6 +563,8 @@ class Trainer:
         if "y" in sample and hasattr(sample["y"], 'shape'):
             self.n_samples += sample["y"].shape[0]
 
+        if self.params is None:
+            raise ValueError("Model parameters must be provided for Flax modules")
         out = self.model(**sample)
 
         if self.data_processor is not None:
@@ -564,7 +573,7 @@ class Trainer:
         eval_step_losses = {}
 
         for loss_name, loss in eval_losses.items():
-            val_loss = loss(out, **sample)
+            val_loss = loss(out, sample['y'])
             eval_step_losses[loss_name] = val_loss
 
         if return_output:
@@ -634,7 +643,7 @@ class Trainer:
                 out, sample = self.data_processor.postprocess(out, sample, step=t) if hasattr(self.data_processor.postprocess, '__code__') and 'step' in self.data_processor.postprocess.__code__.co_varnames else self.data_processor.postprocess(out, sample)
 
             for loss_name, loss in eval_losses.items():
-                step_loss = loss(out, **sample)
+                step_loss = loss(out, sample['y'])
                 eval_step_losses[loss_name] += float(step_loss) if hasattr(step_loss, '__float__') else step_loss
 
             t += 1

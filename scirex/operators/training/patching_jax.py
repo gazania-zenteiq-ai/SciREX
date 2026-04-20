@@ -53,7 +53,7 @@ def unfold_jax(x, dimension, kernel_size, stride):
     # We want: (n_windows, kernel_size, ...)
     windows_list = []
     for i in range(n_windows):
-        window = jax.lax.slice_in_dim(x_moved, i * stride, i * stride + kernel_size, 1, dimension=0)
+        window = jax.lax.slice_in_dim(x_moved, i * stride, i * stride + kernel_size, 1, axis=0)
         windows_list.append(window)
 
     windows = jnp.stack(windows_list, axis=0)
@@ -61,15 +61,16 @@ def unfold_jax(x, dimension, kernel_size, stride):
 
     # Permute back to match PyTorch unfold output
     # From (n_windows, kernel_size, rest_dims...) to (rest_dims..., n_windows, kernel_size)
-    # where rest_dims correspond to original dimensions except the unfolded one
-    ndim_windows = windows.ndim
-    perm_back = list(range(2, ndim_windows)) + [0, 1]
+    # where rest_dims are in their original order
+    rest_before = list(range(dimension))
+    rest_after = list(range(dimension + 1, ndim))
+    perm_back = [2 + i for i in range(len(rest_before))] + [0, 1] + [2 + len(rest_before) + i for i in range(len(rest_after))]
     result = jnp.transpose(windows, perm_back)
 
     return result
 
 
-class MultigridPatching2D(nn.Module):
+class MultigridPatching2D:
     """
     MultigridPatching2D wraps a model in multi-grid domain decomposition and patching.
 
@@ -89,21 +90,16 @@ class MultigridPatching2D(nn.Module):
         Stitching is always performed during evaluation.
     """
 
-    model: nn.Module = None
-    levels: int = 0
-    padding_fraction: float = 0
-    use_distributed: bool = False
-    stitching: bool = True
+    def __init__(self, model=None, levels=0, padding_fraction=0, use_distributed=False, stitching=True):
+        self.model = model
+        self.levels = levels
+        self.padding_fraction = padding_fraction
+        self.use_distributed = use_distributed
+        self.stitching = stitching
 
-    padding_height: int = 0
-    padding_width: int = 0
+        self.padding_height = 0
+        self.padding_width = 0
 
-    def setup(self):
-        """Initialize MultigridPatching2D.
-
-        If computation is split into distributed data or model parallel, adds parameter
-        hooks to account for scattering patches across multiple processes.
-        """
         if isinstance(self.padding_fraction, (float, int)):
             padding_fraction = [self.padding_fraction, self.padding_fraction]
         else:
