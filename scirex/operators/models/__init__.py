@@ -28,3 +28,4 @@ Model architectures for Neural Operators.
 
 from .fno import FNO
 from .wno import WNO
+from .transolver import Transolver

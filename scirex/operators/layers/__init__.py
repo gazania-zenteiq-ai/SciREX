@@ -37,3 +37,6 @@ from .integral_transform import IntegralTransform
 from .fno_block import FNOBlock
 from .wavelet_conv import WaveletConv
 from .wno_block import WNOBlock
+from .physics_attention import PhysicsAttention
+from .transolver_mlp import TransolverMLP
+from .transolver_block import TransolverBlock
