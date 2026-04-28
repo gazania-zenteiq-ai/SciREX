@@ -51,6 +51,9 @@ from scirex.operators.training import create_train_state, TrainState, UnitGaussi
 from scirex.operators.losses import mse, lp_loss
 from scirex.operators.data import random_poisson_batch
 from configs.poisson_fno_config import FNO2DConfig
+from scirex.operators.losses.physics_eq import pde_loss_FNO
+from memory_profiler import profile
+
 
 
 def make_schedule(config: FNO2DConfig):
@@ -98,6 +101,7 @@ def make_schedule(config: FNO2DConfig):
     return schedule
 
 
+@profile
 def main():
     # 1. Load Configuration
     config = FNO2DConfig()
@@ -188,10 +192,10 @@ def main():
 
     # 5. Training Step (Optimized for Gradient Stability)
     @jax.jit
-    def train_step_lploss(state, batch):
+    def train_step_loss(state, batch):
         def loss_fn(params):
-            pred_encoded = state.apply_fn({"params": params}, batch["x"])
-            return lp_loss(pred_encoded, batch["y"])
+            pred_encoded, intermediate_output = state.apply_fn({"params": params}, batch["x"],mutable=["intermediates"])
+            return lp_loss(pred_encoded, batch["y"]) + pde_loss_FNO(physics = 'Poisson2d', params=params, v_L=intermediate_output["intermediates"]["last"][0],forcing_function=batch["x"])
 
         grad_fn = jax.value_and_grad(loss_fn)
         loss, grads = grad_fn(state.params)
@@ -217,7 +221,7 @@ def main():
             start_idx = step * config.batch_size
             end_idx = start_idx + config.batch_size
             batch = {"x": f_shuffled[start_idx:end_idx], "y": u_shuffled[start_idx:end_idx]}
-            state, metrics = train_step_lploss(state, batch)
+            state, metrics = train_step_loss(state, batch)
             epoch_loss += float(metrics["loss"])
             
         epoch_time = time.time() - epoch_start_time
@@ -238,7 +242,7 @@ def main():
         
         current_lr = schedule(state.step)
         
-        if epoch % 10 == 0 or epoch == config.epochs - 1:
+        if epoch % 1 == 0 or epoch == config.epochs - 1:
             print(f"Epoch {epoch:4d} | Train Rel L2: {avg_train_loss:.6e} | "
                   f"Test Rel L2: {v_test_l2:.6f} | Best Rel L2: {best_rel_l2:.6f} | "
                   f"LR: {float(current_lr):.2e} | Time: {epoch_time:.2f}s")
