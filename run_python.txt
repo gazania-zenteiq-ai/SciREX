@@ -1,0 +1,4 @@
+save to file only:  python -m memory_profiler ......py > log.txt 2>&1
+save and see live: python -u -m memory_profiler ........py | tee log.txt
+
+record for plotting: mprof run .....py

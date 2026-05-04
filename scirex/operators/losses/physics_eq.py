@@ -22,6 +22,6 @@ def pde_loss_FNO(physics, params, v_L, forcing_function):
         # Unpack the spatial branches
         d2u_dx2 = d2u[..., 0]  # The pure xx derivative
         d2u_dy2 = d2u[..., 1]  # The pure yy derivative
-        return jnp.mean(jnp.square(d2u_dx2 + d2u_dy2-forcing_function))
+        return jnp.mean(jnp.square((d2u_dx2 + d2u_dy2-forcing_function)/forcing_function))
 
        
