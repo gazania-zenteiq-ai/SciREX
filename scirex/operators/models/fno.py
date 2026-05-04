@@ -78,7 +78,7 @@ class FNO(nn.Module):
     activation: Callable = nn.gelu
 
     @nn.compact
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+    def __call__(self, x: jnp.ndarray, pde_loss: bool = True) -> jnp.ndarray:
         """
         Executes the forward pass.
         
@@ -118,12 +118,15 @@ class FNO(nn.Module):
             out_channels=self.hidden_channels,
             hidden_channels=lifting_hidden,
             n_layers=2,
-            activation=self.activation
+            activation=self.activation,
+            name = "lifting_layer"
         )(x)
+        
+        
         
         # Stage 4: Iterative Kernel Integration (Processing)
         # Global information propagation through Fourier space
-        for _ in range(self.n_layers):
+        for i in range(self.n_layers):
             x = FNOBlock(
                 hidden_channels=self.hidden_channels, 
                 n_modes=self.n_modes,
@@ -133,6 +136,10 @@ class FNO(nn.Module):
                 channel_mlp_skip=self.channel_mlp_skip,
                 use_channel_mlp=self.use_channel_mlp
             )(x)
+            if i == self.n_layers - 1:
+                # Store the output of the last FNO block for PDE loss computation
+                self.sow("intermediates", "last", x)
+           
             
         # Stage 5: Spectral projection (Decoder)
         # Maps latent representation back to the physical target space
@@ -141,12 +148,14 @@ class FNO(nn.Module):
             out_channels=self.out_channels,
             hidden_channels=projection_hidden,
             n_layers=2,
-            activation=self.activation
+            activation=self.activation,
+            name = "projection_layer"
         )(x)
         
         # 6. Inverse Domain Padding (Crop)
         if needs_pad:
             x = pad_layer(x, inverse=True, original_shape=original_shape)
-        
+
+                      
         return x
 

@@ -53,7 +53,7 @@ class FNO2DConfig:
     learning_rate: float = 5e-3
     weight_decay: float = 1e-4
     batch_size: int = 32
-    epochs: int = 500
+    epochs: int = 50
     steps_per_epoch: int = 10
     n_test: int = 200
     n_train: int = 2000
@@ -133,7 +133,7 @@ class FNO3DConfig:
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
     batch_size: int = 10
-    epochs: int = 500
+    epochs: int = 2
     steps_per_epoch: int = 50
     n_test: int = 20
     n_train: int = 2000

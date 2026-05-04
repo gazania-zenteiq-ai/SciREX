@@ -105,5 +105,6 @@ lib64
 
 *.mat
 *.npy
-*npz
-*zip
+
+*.npz
+*.zip
