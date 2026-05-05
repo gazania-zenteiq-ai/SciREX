@@ -22,12 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for embedding layers.
-
-Tests are written in an N-dimensional style so the modules
-work for arbitrary spatial dimensions.
-"""
+"""Unit tests for embedding layers."""
 
 import jax
 import jax.numpy as jnp
@@ -42,18 +37,17 @@ from scirex.operators.layers.embeddings import (
 )
 
 
-
 # GridEmbedding
+
 
 @pytest.mark.parametrize(
     "spatial_shape",
     [
-        (16, 16),       # 2D
-        (8, 8, 8),      # 3D
-        (4, 4, 4, 4),   # 4D
+        (16, 16),  # 2D
+        (8, 8, 8),  # 3D
+        (4, 4, 4, 4),  # 4D
     ],
 )
-
 def test_grid_embedding_nd(spatial_shape):
     """GridEmbedding should append spatial coordinates."""
 
@@ -64,9 +58,7 @@ def test_grid_embedding_nd(spatial_shape):
 
     x = jnp.ones((batch, *spatial_shape, in_channels))
 
-    model = GridEmbedding(
-        grid_boundaries=((0.0, 1.0),) * len(spatial_shape)
-    )
+    model = GridEmbedding(grid_boundaries=((0.0, 1.0),) * len(spatial_shape))
 
     params = model.init(rng, x)
     y = model.apply(params, x)
@@ -76,8 +68,8 @@ def test_grid_embedding_nd(spatial_shape):
     assert y.shape == (batch, *spatial_shape, expected_channels)
 
 
-
 # SinusoidalEmbedding
+
 
 @pytest.mark.parametrize(
     "embedding_type",
@@ -90,7 +82,6 @@ def test_grid_embedding_nd(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_sinusoidal_embedding_nd(spatial_shape, embedding_type):
     """SinusoidalEmbedding should produce correct output channels."""
 
@@ -117,6 +108,7 @@ def test_sinusoidal_embedding_nd(spatial_shape, embedding_type):
 
 # RotaryEmbedding
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
@@ -124,7 +116,6 @@ def test_sinusoidal_embedding_nd(spatial_shape, embedding_type):
         (8, 8, 8),
     ],
 )
-
 def test_rotary_embedding_nd(spatial_shape):
     """RotaryEmbedding should generate frequency tensors."""
 
@@ -142,6 +133,7 @@ def test_rotary_embedding_nd(spatial_shape):
 
 # rotate_half
 
+
 def test_rotate_half_shape():
     """rotate_half should preserve tensor shape."""
 
@@ -153,6 +145,7 @@ def test_rotate_half_shape():
 
 
 # apply_rotary_pos_emb
+
 
 def test_apply_rotary_pos_emb_shape():
     """apply_rotary_pos_emb should preserve tensor shape."""

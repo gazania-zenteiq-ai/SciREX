@@ -28,6 +28,7 @@ import optax
 from scirex.operators.models.fno import FNO
 from scirex.operators.training.train_state import create_train_state
 
+
 def test_fno_overfit_toy():
     """Regression test: Check if FNO can overfit a single toy sample."""
     rng = jax.random.PRNGKey(0)
@@ -35,27 +36,29 @@ def test_fno_overfit_toy():
     hidden_channels, n_layers = 16, 2
     n_modes = (4, 4)
     out_channels = 1
-    
+
     model = FNO(
-        hidden_channels=hidden_channels, 
-        n_layers=n_layers, 
-        n_modes=n_modes, 
+        hidden_channels=hidden_channels,
+        n_layers=n_layers,
+        n_modes=n_modes,
         out_channels=out_channels,
-        activation=lambda x: x
+        activation=lambda x: x,
     )
-    
+
     # Toy data: identity mapping-like
     x = jax.random.normal(rng, (batch, nx, ny, in_channels))
-    y_target = x * 2.0 # Simple target
-    
-    state = create_train_state(rng, model, (batch, nx, ny, in_channels), learning_rate=5e-4)
-    
+    y_target = x * 2.0  # Simple target
+
+    state = create_train_state(
+        rng, model, (batch, nx, ny, in_channels), learning_rate=5e-4
+    )
+
     @jax.jit
     def train_step(state, x, y):
         def loss_fn(params):
             preds = state.apply_fn({"params": params}, x)
             return jnp.mean((preds - y) ** 2)
-        
+
         loss, grads = jax.value_and_grad(loss_fn)(state.params)
         state = state.apply_gradients(grads=grads)
         return state, loss
@@ -65,7 +68,7 @@ def test_fno_overfit_toy():
         state, loss = train_step(state, x, y_target)
         if i == 0:
             initial_loss = loss
-            
+
     final_loss = loss
     print(f"Initial loss: {initial_loss:.6f}, Final loss: {final_loss:.6f}")
-    assert final_loss < initial_loss * 0.1 # Should decrease significantly
+    assert final_loss < initial_loss * 0.1  # Should decrease significantly

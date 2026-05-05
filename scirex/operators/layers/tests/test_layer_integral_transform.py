@@ -22,12 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for IntegralTransform.
-
-Tests are written in N-D style so the layer works for
-arbitrary spatial dimensionalities.
-"""
+"""Unit tests for IntegralTransform."""
 
 import jax
 import jax.numpy as jnp
@@ -38,14 +33,14 @@ from scirex.operators.layers.integral_transform import IntegralTransform
 
 # Forward pass without f_y
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
-        (16, 16),        # 2D
-        (8, 8, 8),       # 3D
+        (16, 16),  # 2D
+        (8, 8, 8),  # 3D
     ],
 )
-
 def test_integral_transform_forward_nd(spatial_shape):
     """IntegralTransform should run and preserve spatial shape."""
 
@@ -67,6 +62,7 @@ def test_integral_transform_forward_nd(spatial_shape):
 
 # Forward pass with f_y
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
@@ -74,7 +70,6 @@ def test_integral_transform_forward_nd(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_integral_transform_with_fy(spatial_shape):
     """IntegralTransform should handle f_y branch."""
 
@@ -98,11 +93,11 @@ def test_integral_transform_with_fy(spatial_shape):
 
 # Different channel configurations
 
+
 @pytest.mark.parametrize(
     "channels",
     [4, 8, 12],
 )
-
 def test_integral_transform_channel_variations(channels):
     """IntegralTransform should support different channel sizes."""
 

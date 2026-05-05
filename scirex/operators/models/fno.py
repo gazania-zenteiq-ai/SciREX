@@ -30,39 +30,10 @@ from ..layers.embeddings import GridEmbedding
 from ..layers.padding import DomainPadding
 from ..layers.fno_block import FNOBlock
 
-class FNO(nn.Module):
-    """
-    N-dimensional Fourier Neural Operator (supports 2D and 3D).
-    
-    The spatial dimensionality is automatically inferred from the length of
-    ``n_modes``:
-      - ``len(n_modes) == 2`` → 2D FNO  (input shape: batch, nx, ny, channels)
-      - ``len(n_modes) == 3`` → 3D FNO  (input shape: batch, nx, ny, nz, channels)
-    
-    FNO learns operators between functional spaces by parameterized 
-    integral kernels in the Fourier domain. This implementation aligns 
-    with the standard architecture used in the original neuraloperator
-    repository.
-    
-    The architecture follows a lifting-operator-projection pipeline:
-    [Input] -> Lifting (ChannelMLP) -> Iterative FNOBlocks -> Projection (ChannelMLP) -> [Output]
 
-    Attributes:
-        hidden_channels (int): Width of the latent spectral representation.
-        n_layers (int): Number of stacked FNO blocks.
-        n_modes (Tuple[int, ...]): Fourier modes to retain per spatial dimension.
-            Length determines 2D vs 3D.
-        out_channels (int): Dimensionality of the output field.
-        lifting_channel_ratio (int): Expansion factor for the lifting layer.
-        projection_channel_ratio (int): Expansion factor for the projection layer.
-        use_grid (bool): Whether to append Cartesian coordinates to the input.
-        fno_skip (str): Skip connection type for the spectral branch.
-        channel_mlp_skip (str): Skip connection type for the MLP refinement.
-        use_channel_mlp (bool): Whether to use the MLP refinement branch.
-        padding (float/list): Amount of domain padding to handle non-periodic boundaries.
-        use_norm (bool): Whether to use InstanceNorm for training stabilization.
-        activation (Callable): Activation function for the entire network.
-    """
+class FNO(nn.Module):
+    """N-dimensional Fourier Neural Operator (supports 2D and 3D)."""
+
     hidden_channels: int
     n_layers: int
     n_modes: Tuple[int, ...]
@@ -79,38 +50,27 @@ class FNO(nn.Module):
 
     @nn.compact
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        """
-        Executes the forward pass.
-        
-        Args:
-            x (jnp.ndarray): Input tensor.
-                - 2D: shape (batch, nx, ny, in_channels)
-                - 3D: shape (batch, nx, ny, nz, in_channels)
-            
-        Returns:
-            jnp.ndarray: Predicted field with the same spatial dimensions
-            and ``out_channels`` as the last dimension.
-        """
+        """Executes the forward pass."""
         n_dim = len(self.n_modes)
         original_shape = x.shape
-        
+
         # Check if padding is needed (handles both float and list)
         needs_pad = (
             any(p > 0 for p in self.padding)
             if isinstance(self.padding, (list, tuple))
             else self.padding > 0
         )
-        
+
         # 1. Positional Embedding (Grid)
         if self.use_grid:
             grid_boundaries = tuple((0.0, 1.0) for _ in range(n_dim))
             x = GridEmbedding(grid_boundaries=grid_boundaries)(x)
-            
+
         # 2. Domain Padding (to handle non-periodic conditions)
         if needs_pad:
             pad_layer = DomainPadding(padding=self.padding)
             x = pad_layer(x)
-            
+
         # Stage 3: Spectral lifting (Encoder)
         # Maps input channels (e.g., physical parameters + grid) to latent space
         lifting_hidden = self.hidden_channels * self.lifting_channel_ratio
@@ -118,22 +78,22 @@ class FNO(nn.Module):
             out_channels=self.hidden_channels,
             hidden_channels=lifting_hidden,
             n_layers=2,
-            activation=self.activation
+            activation=self.activation,
         )(x)
-        
+
         # Stage 4: Iterative Kernel Integration (Processing)
         # Global information propagation through Fourier space
         for _ in range(self.n_layers):
             x = FNOBlock(
-                hidden_channels=self.hidden_channels, 
+                hidden_channels=self.hidden_channels,
                 n_modes=self.n_modes,
                 activation=self.activation,
                 use_norm=self.use_norm,
                 skip_type=self.fno_skip,
                 channel_mlp_skip=self.channel_mlp_skip,
-                use_channel_mlp=self.use_channel_mlp
+                use_channel_mlp=self.use_channel_mlp,
             )(x)
-            
+
         # Stage 5: Spectral projection (Decoder)
         # Maps latent representation back to the physical target space
         projection_hidden = self.hidden_channels * self.projection_channel_ratio
@@ -141,12 +101,11 @@ class FNO(nn.Module):
             out_channels=self.out_channels,
             hidden_channels=projection_hidden,
             n_layers=2,
-            activation=self.activation
+            activation=self.activation,
         )(x)
-        
+
         # 6. Inverse Domain Padding (Crop)
         if needs_pad:
             x = pad_layer(x, inverse=True, original_shape=original_shape)
-        
-        return x
 
+        return x

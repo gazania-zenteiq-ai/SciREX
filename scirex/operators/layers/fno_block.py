@@ -29,28 +29,10 @@ from .spectral_conv import SpectralConv
 from .skip_connection import SkipConnection
 from .channel_mlp import ChannelMLP
 
+
 class FNOBlock(nn.Module):
-    """
-    N-dimensional Fourier Neural Operator (FNO) Block (supports 2D and 3D).
-    
-    The dimensionality is automatically inferred from the length of ``n_modes``:
-      - ``len(n_modes) == 2`` → 2D FNO block
-      - ``len(n_modes) == 3`` → 3D FNO block
-    
-    This block implements a single iterative step of the FNO architecture, 
-    combining a spectral convolution for global feature learning with a 
-    standard convolution (via SkipConnection) for local feature refinement.
-    
-    Attributes:
-        hidden_channels (int): Dimensionality of the latent representation.
-        n_modes (Tuple[int, ...]): Number of Fourier modes to retain in each
-            spatial dimension. Length determines 2D vs 3D.
-        activation (Callable): Nonlinear activation function (default: nn.gelu).
-        use_norm (bool): Whether to apply Instance Normalization for training stability.
-        skip_type (str): Type of bypass connection ('identity', 'linear', or 'soft-gating').
-        channel_mlp_skip (str): Type of bypass connection for the Channel MLP refinement.
-        use_channel_mlp (bool): Whether to include a point-wise MLP after the spectral layers.
-    """
+    """N-dimensional Fourier Neural Operator (FNO) Block (supports 2D and 3D)."""
+
     hidden_channels: int
     n_modes: Tuple[int, ...]
     activation: Callable = nn.gelu
@@ -63,23 +45,22 @@ class FNOBlock(nn.Module):
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         # Step 1: Global feature extraction via Spectral Convolution
         y_s = SpectralConv(
-            in_channels=self.hidden_channels, 
-            out_channels=self.hidden_channels, 
-            n_modes=self.n_modes
+            in_channels=self.hidden_channels,
+            out_channels=self.hidden_channels,
+            n_modes=self.n_modes,
         )(x)
-        
+
         # Step 2: Local feature extraction via Spatial Skip Connection
         y_p = SkipConnection(
-            out_channels=self.hidden_channels, 
-            skip_type=self.skip_type
+            out_channels=self.hidden_channels, skip_type=self.skip_type
         )(x)
-        
+
         # Step 3: Branch fusion and stabilization
         x = y_s + y_p
-        
+
         if self.use_norm:
             x = nn.InstanceNorm()(x)
-        
+
         x = self.activation(x)
 
         # Step 4: Point-wise refinement (Channel MLP)
@@ -89,16 +70,14 @@ class FNOBlock(nn.Module):
                 out_channels=self.hidden_channels,
                 hidden_channels=self.hidden_channels,
                 n_layers=2,
-                activation=self.activation
+                activation=self.activation,
             )(x)
-            
+
             y_skip = SkipConnection(
-                out_channels=self.hidden_channels,
-                skip_type=self.channel_mlp_skip
+                out_channels=self.hidden_channels, skip_type=self.channel_mlp_skip
             )(x)
-            
+
             x = y_mlp + y_skip
             x = self.activation(x)
 
         return x
-

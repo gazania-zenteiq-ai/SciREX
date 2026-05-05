@@ -22,9 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for Poisson data generators and solvers (2D and 3D).
-"""
+"""Unit tests for Poisson data generators and solvers (2D and 3D)."""
 
 import os
 import shutil
@@ -36,21 +34,25 @@ import torch
 
 from scirex.operators.data.poisson import random_poisson_batch, random_poisson_3d_batch
 
+
 @pytest.mark.parametrize("resolution", [16])
 def test_PoissonDataset(resolution):
     f, u = random_poisson_batch(batch_size=2, nx=resolution, ny=resolution)
-    
+
     # f has 3 channels if include_mesh=True by default for poisson though it's manually constructed
-    assert f.shape == (2, resolution, resolution, 3) 
+    assert f.shape == (2, resolution, resolution, 3)
     assert u.shape == (2, resolution, resolution, 1)
     assert isinstance(f, np.ndarray)
     assert isinstance(u, np.ndarray)
 
+
 @pytest.mark.parametrize("resolution", [16])
 def test_Poisson3DDataset(resolution):
-    f, u = random_poisson_3d_batch(batch_size=2, nx=resolution, ny=resolution, nz=resolution)
-    
-    assert f.shape == (2, resolution, resolution, resolution, 4) 
+    f, u = random_poisson_3d_batch(
+        batch_size=2, nx=resolution, ny=resolution, nz=resolution
+    )
+
+    assert f.shape == (2, resolution, resolution, resolution, 4)
     assert u.shape == (2, resolution, resolution, resolution, 1)
     assert isinstance(f, np.ndarray)
     assert isinstance(u, np.ndarray)

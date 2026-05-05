@@ -26,13 +26,10 @@ from typing import Literal, Optional
 from flax import linen as nn
 import jax.numpy as jnp
 
+
 class SoftGating(nn.Module):
-    """
-    Parametric channel-wise gating mechanism.
-    
-    Multiplies each channel by a learnable scalar weight. Helps the model 
-    dynamically prioritize certain feature channels during the bypass operation.
-    """
+    """Parametric channel-wise gating mechanism."""
+
     in_channels: int
 
     @nn.compact
@@ -42,18 +39,14 @@ class SoftGating(nn.Module):
         # We want a learnable weight per channel.
         shape = [1] * x.ndim
         shape[-1] = self.in_channels
-        
-        w = self.param('weight', nn.initializers.ones, shape)
+
+        w = self.param("weight", nn.initializers.ones, shape)
         return x * w
 
+
 class SkipConnection(nn.Module):
-    """
-    Generic Skip (Bypass) Connection.
-    
-    Provides a parallel path to the spectral transformations, capturing 
-    local information and facilitating gradient flow. 
-    Matches the flexibility of the standard neuraloperator implementation.
-    """
+    """Generic Skip (Bypass) Connection."""
+
     out_channels: int
     skip_type: Literal["identity", "linear", "soft-gating"] = "linear"
 

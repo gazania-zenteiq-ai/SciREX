@@ -26,21 +26,10 @@ from typing import Optional, Callable, Sequence
 from flax import linen as nn
 import jax.numpy as jnp
 
+
 class ChannelMLP(nn.Module):
-    """
-    Unified Channel MLP (Point-wise MLP) for GINO and FNO.
-    Standardized to JAX/Flax channels-last convention (B, ..., C).
+    """Unified Channel MLP (Point-wise MLP) for GINO and FNO."""
 
-    This implementation combines the efficiency of the FNO version with 
-    additional features (dropout) often required for GINO.
-
-    Attributes:
-        out_channels (int): Dimensionality of the output representation.
-        hidden_channels (int, optional): Width of internal layers. Defaults to out_channels.
-        n_layers (int): Total number of linear transformations.
-        activation (Callable): Activation function between layers.
-        dropout_rate (float): Dropout probability.
-    """
     out_channels: int
     hidden_channels: Optional[int] = None
     n_layers: int = 1
@@ -49,33 +38,31 @@ class ChannelMLP(nn.Module):
 
     @nn.compact
     def __call__(self, x: jnp.ndarray, deterministic: bool = True) -> jnp.ndarray:
-        hidden = self.hidden_channels if self.hidden_channels is not None else self.out_channels
-        
+        hidden = (
+            self.hidden_channels
+            if self.hidden_channels is not None
+            else self.out_channels
+        )
+
         for i in range(self.n_layers):
-            is_last = (i == self.n_layers - 1)
+            is_last = i == self.n_layers - 1
             layer_out = self.out_channels if is_last else hidden
-            
+
             x = nn.Dense(layer_out, name=f"dense_{i}")(x)
-            
+
             if not is_last:
                 x = self.activation(x)
                 if self.dropout_rate > 0:
                     x = nn.Dropout(rate=self.dropout_rate, name=f"dropout_{i}")(
                         x, deterministic=deterministic
                     )
-                    
+
         return x
 
+
 class LinearChannelMLP(nn.Module):
-    """
-    Linear Channel MLP with explicit layer sizes.
-    
-    Attributes:
-        layers (Sequence[int]): List of channel sizes. The first element is treated 
-            as input (ignored by nn.Dense) and subsequent as layer widths.
-        activation (Callable): Activation function.
-        dropout_rate (float): Dropout probability.
-    """
+    """Linear Channel MLP with explicit layer sizes."""
+
     layers: Sequence[int]
     activation: Callable = nn.gelu
     dropout_rate: float = 0.0
@@ -83,10 +70,12 @@ class LinearChannelMLP(nn.Module):
     @nn.compact
     def __call__(self, x: jnp.ndarray, deterministic: bool = True) -> jnp.ndarray:
         n_layers = len(self.layers) - 1
-        assert n_layers >= 1, "Layers sequence must contain at least [in_channels, out_channels]"
+        assert (
+            n_layers >= 1
+        ), "Layers sequence must contain at least [in_channels, out_channels]"
 
         for i in range(n_layers):
-            is_last = (i == n_layers - 1)
+            is_last = i == n_layers - 1
             x = nn.Dense(self.layers[i + 1], name=f"dense_{i}")(x)
 
             if not is_last:

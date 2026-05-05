@@ -22,12 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for SkipConnection and SoftGating.
-
-Tests are written in N-D style so the modules work for
-arbitrary spatial dimensions.
-"""
+"""Unit tests for SkipConnection and SoftGating."""
 
 import jax
 import jax.numpy as jnp
@@ -38,14 +33,14 @@ from scirex.operators.layers.skip_connection import SoftGating, SkipConnection
 
 # SoftGating
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
-        (16, 16),        # 2D
-        (8, 8, 8),       # 3D
+        (16, 16),  # 2D
+        (8, 8, 8),  # 3D
     ],
 )
-
 def test_soft_gating_nd(spatial_shape):
     """SoftGating should preserve tensor shape."""
 
@@ -66,6 +61,7 @@ def test_soft_gating_nd(spatial_shape):
 
 # SkipConnection identity
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
@@ -73,7 +69,6 @@ def test_soft_gating_nd(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_skip_connection_identity(spatial_shape):
     """Identity skip should return the input unchanged."""
 
@@ -95,6 +90,7 @@ def test_skip_connection_identity(spatial_shape):
 
 # SkipConnection linear
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
@@ -102,7 +98,6 @@ def test_skip_connection_identity(spatial_shape):
         (8, 8, 8),
     ],
 )
-
 def test_skip_connection_linear(spatial_shape):
     """Linear skip should project channels."""
 
@@ -124,6 +119,7 @@ def test_skip_connection_linear(spatial_shape):
 
 # SkipConnection soft-gating
 
+
 @pytest.mark.parametrize(
     "spatial_shape",
     [
@@ -131,7 +127,6 @@ def test_skip_connection_linear(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_skip_connection_soft_gating(spatial_shape):
     """Soft-gating skip should preserve shape."""
 
@@ -151,6 +146,7 @@ def test_skip_connection_soft_gating(spatial_shape):
 
 
 # Invalid skip type
+
 
 def test_skip_connection_invalid_type():
     """Invalid skip type should raise ValueError."""

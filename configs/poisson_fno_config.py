@@ -37,167 +37,54 @@ Usage
     # config.*       → training / data params  (lr, batch_size, …)
 """
 
-from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, List
+from zencfg import ConfigBase
 from configs.models import FNO_Medium2D, FNO_Medium3D, FNO_Large2D
 
-
-@dataclass
-class FNO2DConfig:
-    """Full experiment config for 2D Poisson + FNO."""
-
-    # ── Model Architecture (preset, can be swapped) ──
-    model: FNO_Medium2D = field(default_factory=FNO_Medium2D)
-
-    # ── Training Parameters ──
+class PoissonOptConfig(ConfigBase):
     learning_rate: float = 5e-3
     weight_decay: float = 1e-4
-    batch_size: int = 32
     epochs: int = 500
     steps_per_epoch: int = 10
-    n_test: int = 200
-    n_train: int = 2000
-
-    # ── LR Scheduler ──
-    scheduler_type: Literal["step", "cosine"] = "cosine"
-    cosine_decay_epochs: int = 500  # Cosine LR reaches 0 at this epoch
-    scheduler_step_size: int = 100   # used only when scheduler_type="step"
-    scheduler_gamma: float = 0.5     # used only when scheduler_type="step"
-
-    # ── Data Generation ──
-    resolution: tuple = (64, 64)
-    seed: int = 42
-
-    # ── Convenience properties that proxy into the model preset ──
-    @property
-    def n_modes(self):
-        return self.model.n_modes
-
-    @property
-    def hidden_channels(self):
-        return self.model.hidden_channels
-
-    @property
-    def n_layers(self):
-        return self.model.n_layers
-
-    @property
-    def in_channels(self):
-        return self.model.in_channels
-
-    @property
-    def out_channels(self):
-        return self.model.out_channels
-    
-    @property
-    def lifting_channel_ratio(self):
-        return self.model.lifting_channel_ratio
-
-    @property
-    def projection_channel_ratio(self):
-        return self.model.projection_channel_ratio
-    
-    @property
-    def use_grid(self):
-        return self.model.use_grid
-
-    @property
-    def fno_skip(self):
-        return self.model.fno_skip
-    
-    @property
-    def use_channel_mlp(self):
-        return self.model.use_channel_mlp
-
-    @property
-    def channel_mlp_skip(self):
-        return self.model.channel_mlp_skip
-
-    @property
-    def use_norm(self):
-        return self.model.use_norm
-
-    @property
-    def domain_padding(self):
-        return self.model.domain_padding
-
-
-@dataclass
-class FNO3DConfig:
-    """Full experiment config for 3D Poisson + FNO."""
-
-    # ── Model Architecture (preset, can be swapped) ──
-    model: FNO_Medium3D = field(default_factory=FNO_Medium3D)
-
-    # ── Training Parameters ──
-    learning_rate: float = 1e-3
-    weight_decay: float = 1e-4
-    batch_size: int = 10
-    epochs: int = 500
-    steps_per_epoch: int = 50
-    n_test: int = 20
-    n_train: int = 2000
-
-    # ── LR Scheduler ──
     scheduler_type: Literal["step", "cosine"] = "cosine"
     cosine_decay_epochs: int = 500
-    scheduler_step_size: int = 30    # used only when scheduler_type="step"
-    scheduler_gamma: float = 0.5     # used only when scheduler_type="step"
+    scheduler_step_size: int = 100
+    scheduler_gamma: float = 0.5
 
-    # ── Data Generation ──
-    resolution: tuple = (32, 32, 32)
-    include_mesh: bool = False # Now redundant as model handles it
+class PoissonDatasetConfig(ConfigBase):
+    batch_size: int = 32
+    n_test: int = 200
+    n_train: int = 2000
+    resolution: List[int] = [64, 64]
     seed: int = 42
 
-    # ── Convenience properties that proxy into the model preset ──
-    @property
-    def n_modes(self):
-        return self.model.n_modes
 
-    @property
-    def hidden_channels(self):
-        return self.model.hidden_channels
+class FNO2DConfig(ConfigBase):
+    """Experiment config for 2D Poisson using FNO."""
 
-    @property
-    def n_layers(self):
-        return self.model.n_layers
+    model: FNO_Medium2D = FNO_Medium2D()
+    opt: PoissonOptConfig = PoissonOptConfig()
+    data: PoissonDatasetConfig = PoissonDatasetConfig()
 
-    @property
-    def in_channels(self):
-        return self.model.in_channels
 
-    @property
-    def out_channels(self):
-        return self.model.out_channels
+class Poisson3DOptConfig(PoissonOptConfig):
+    learning_rate: float = 1e-3
+    steps_per_epoch: int = 50
+    scheduler_step_size: int = 30
 
-    @property
-    def lifting_channel_ratio(self):
-        return self.model.lifting_channel_ratio
 
-    @property
-    def projection_channel_ratio(self):
-        return self.model.projection_channel_ratio
+class Poisson3DDatasetConfig(PoissonDatasetConfig):
+    batch_size: int = 10
+    n_test: int = 20
+    resolution: List[int] = [32, 32, 32]
+    include_mesh: bool = False
 
-    @property
-    def use_grid(self):
-        return self.model.use_grid
 
-    @property
-    def use_norm(self):
-        return self.model.use_norm
+class FNO3DConfig(ConfigBase):
+    """Experiment config for 3D Poisson using FNO."""
 
-    @property
-    def fno_skip(self):
-        return self.model.fno_skip
-    
-    @property
-    def use_channel_mlp(self):
-        return self.model.use_channel_mlp
+    model: FNO_Medium3D = FNO_Medium3D()
+    opt: PoissonOptConfig = Poisson3DOptConfig()
+    data: PoissonDatasetConfig = Poisson3DDatasetConfig()
 
-    @property
-    def channel_mlp_skip(self):
-        return self.model.channel_mlp_skip
 
-    @property
-    def domain_padding(self):
-        return self.model.domain_padding
