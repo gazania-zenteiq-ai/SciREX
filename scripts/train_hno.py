@@ -5,8 +5,8 @@ import os
 import sys
 
 # Force deterministic GPU operations for reproducibility
-os.environ["XLA_FLAGS"] = os.environ.get("XLA_FLAGS", "") + " --xla_gpu_deterministic_ops=true"
-os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
+# os.environ["XLA_FLAGS"] = os.environ.get("XLA_FLAGS", "") + " --xla_gpu_deterministic_ops=true"
+# os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
 
 # Ensure project root is in path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -36,28 +36,28 @@ from scirex.operators.losses import lp_loss
 @dataclass
 class HNOConfig:
     # Model architecture
-    hidden_channels: int = 32
-    n_layers: int = 4
-    n_modes: Tuple[int, int] = (16, 16) # (modes_r, modes_theta)
+    hidden_channels: int = 64
+    n_layers: int =3
+    n_modes: Tuple[int, int] = (32, 32) # (modes_r, modes_theta)
     out_channels: int = 1
     lifting_channel_ratio: int = 2
     projection_channel_ratio: int = 2
     use_channel_mlp: bool = True
-    channel_mlp_skip: str = "soft-gating"
+    channel_mlp_skip: str = "linear"
     hno_skip: str = "linear"
     use_norm: bool = False
-    domain_padding: float = 0.0
+    domain_padding: float = 0.024
     
     # Training
     batch_size: int = 2
-    epochs: int = 5
+    epochs: int = 500
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
     seed: int = 42
     
     # Scheduler
     scheduler_type: str = "cosine"
-    cosine_decay_epochs: int = 100
+    cosine_decay_epochs: int = 500
     
     # Data resolution - Must perfectly match the grid shape inside your CSV files
     res_r: int = 500
@@ -70,16 +70,16 @@ class HNOConfig:
 # Each file represents one sample (e.g. one PDE solution / one grid)
 TRAIN_FILES = [
     "data/20250804_stator_magnetOD_28_1_Az_30d_uniform.csv",
-    "data/20250804_stator_magnetOD_28_1_Az_60d_uniform.csv",
-    "data/20250804_stator_magnetOD_32_1_Az_30d_uniform.csv",
+    # "data/20250804_stator_magnetOD_28_1_Az_60d_uniform.csv",
     "data/20250804_stator_magnetOD_36_1_Az_30d_uniform.csv",
-    "data/20250804_stator_magnetOD_36_1_Az_60d_uniform.csv",
+    # "data/20250804_stator_magnetOD_36_1_Az_60d_uniform.csv",
     "data/20250820_stator_magnetOD_30_1_Az_30d_uniform.csv",
+    "data/20250820_stator_magnetOD_34_1_Az_30d_uniform.csv",
 ]
 
 TEST_FILES = [
-   "data/20250820_stator_magnetOD_34_1_Az_30d_uniform.csv",
-   "data/20250804_stator_magnetOD_32_1_Az_60d_uniform.csv",
+      "data/20250804_stator_magnetOD_32_1_Az_30d_uniform.csv",
+#    "data/20250804_stator_magnetOD_32_1_Az_60d_uniform.csv",
 ]
 
 # ==========================================
@@ -115,18 +115,26 @@ def load_hno_data(file_list, config):
             r_grid = df['r'].values.reshape((config.res_r, config.res_theta))
             theta_grid = df['theta'].values.reshape((config.res_r, config.res_theta))
             Az_grid = df['Az'].values.reshape((config.res_r, config.res_theta))
-            if 'file_id' in df.columns:
-                file_id_grid = df['file_id'].values.reshape((config.res_r, config.res_theta))
+            
+            # Extract magnetOD from the filename to use as a continuous physical parameter
+            import re
+            match = re.search(r'magnetOD_(\d+)', file_path)
+            if match:
+                magnet_od = float(match.group(1))
             else:
-                file_id_grid = np.ones((config.res_r, config.res_theta))
+                print(f"Warning: Could not extract magnetOD from {file_path}. Defaulting to 1.0")
+                magnet_od = 1.0
+                
+            param_grid = np.full((config.res_r, config.res_theta), magnet_od)
+            
         except ValueError as e:
             print(f"Reshape error in {file_path}. Ensure it has exactly {config.res_r * config.res_theta} rows.")
             raise e
         
         # Define the Input and Output for the Neural Operator.
-        # Here we use (theta, r, file_id) as the input features (Channels = 3)
+        # Here we use (theta, r, magnet_od) as the input features (Channels = 3)
         # And we predict Az as the output (Channels = 1)
-        input_field = np.stack([theta_grid, r_grid, file_id_grid], axis=-1)
+        input_field = np.stack([theta_grid, r_grid, param_grid], axis=-1)
         output_field = np.expand_dims(Az_grid, axis=-1)
         
         inputs.append(input_field)
@@ -153,7 +161,7 @@ def make_schedule(config: HNOConfig, steps_per_epoch: int):
     cosine_schedule = optax.cosine_decay_schedule(
         init_value=config.learning_rate,
         decay_steps=cosine_decay_steps,
-        alpha=0.0
+        alpha=0.01
     )
     schedule = optax.join_schedules(
         schedules=[
@@ -322,7 +330,49 @@ def main():
     plt.grid(True, which="both", ls="-", alpha=0.5)
     plt.legend()
     plt.savefig(os.path.join(results_dir, "hno_losses.png"), dpi=150)
+    plt.show()
     print(f"Loss curves saved to: {results_dir}")
+
+    # Generate prediction plots for the test data
+    print("Generating side-by-side prediction plots...")
+    
+    # Load best model parameters
+    with open(ckpt_path, "rb") as f:
+        best_params = flax.serialization.from_bytes(state.params, f.read())
+    
+    # Get predictions on the test set
+    test_pred_encoded_best = state.apply_fn({"params": best_params}, test_batch_encoded["x"])
+    test_pred_best = y_normalizer.decode(test_pred_encoded_best)
+    
+    # Plot up to 2 test samples
+    for idx in range(min(n_test, 2)):
+        true_field = y_test[idx, ..., 0]
+        pred_field = test_pred_best[idx, ..., 0]
+        diff_field = np.abs(true_field - pred_field)
+        
+        plt.figure(figsize=(18, 5))
+        
+        plt.subplot(1, 3, 1)
+        im1 = plt.imshow(true_field, origin='lower', cmap='viridis', aspect='auto')
+        plt.title(f'Ground Truth (Sample {idx})')
+        plt.colorbar(im1, fraction=0.046, pad=0.04)
+        
+        plt.subplot(1, 3, 2)
+        im2 = plt.imshow(pred_field, origin='lower', cmap='viridis', aspect='auto')
+        plt.title(f'Model Output (Sample {idx})')
+        plt.colorbar(im2, fraction=0.046, pad=0.04)
+        
+        plt.subplot(1, 3, 3)
+        im3 = plt.imshow(diff_field, origin='lower', cmap='magma', aspect='auto')
+        plt.title(f'Absolute Difference (Sample {idx})')
+        plt.colorbar(im3, fraction=0.046, pad=0.04)
+        
+        plt.tight_layout()
+        pred_plot_path = os.path.join(results_dir, f"hno_prediction_test_{idx}.png")
+        plt.savefig(pred_plot_path, dpi=150)
+        plt.show()
+
+    print(f"All plots saved to: {results_dir}")
 
 if __name__ == "__main__":
     main()
