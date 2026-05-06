@@ -15,12 +15,18 @@ def convert_grid(input_file, output_file, res_r, res_theta):
         sys.exit(1)
 
     # Validate that required columns are present
-    expected_cols = ['x', 'y', 'z', 'Ax', 'Ay', 'Az', 'r', 'theta']
+    expected_cols = ['x', 'y', 'z', 'Ax', 'Ay', 'Az']
     missing_cols = [col for col in expected_cols if col not in df.columns]
     if missing_cols:
         print(f"Error: The following required columns are missing from the data: {missing_cols}")
-        print("Please ensure your CSV has headers: x, y, z, Ax, Ay, Az, r, theta")
+        print("Please ensure your data has columns: x, y, z, Ax, Ay, Az")
         sys.exit(1)
+
+    # Calculate polar coordinates if they don't exist
+    if 'r' not in df.columns or 'theta' not in df.columns:
+        print("Calculating r and theta from x and y...")
+        df['r'] = np.sqrt(df['x']**2 + df['y']**2)
+        df['theta'] = np.arctan2(df['y'], df['x'])
 
     print(f"Data successfully loaded. Shape: {df.shape}")
 
