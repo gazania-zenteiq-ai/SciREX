@@ -195,7 +195,8 @@ def main():
     def train_step_loss(state, batch):
         def loss_fn(params):
             pred_encoded, intermediate_output = state.apply_fn({"params": params}, batch["x"],mutable=["intermediates"])
-            return lp_loss(pred_encoded, batch["y"]) + pde_loss_FNO(physics = 'Poisson2d', params=params, v_L=intermediate_output["intermediates"]["last"][0],forcing_function=batch["x"])
+            # print(f"L_p loss {lp_loss(pred_encoded, batch['y'])} | Pde loss {pde_loss_FNO(physics = 'Poisson2d', params=params, v_L=intermediate_output['intermediates']['last'][0],forcing_function=batch['x'])}")
+            return 100*lp_loss(pred_encoded, batch["y"]) + pde_loss_FNO(physics = 'Poisson2d', params=params, v_L=intermediate_output["intermediates"]["last"][0],forcing_function=batch["x"])
 
         grad_fn = jax.value_and_grad(loss_fn)
         loss, grads = grad_fn(state.params)

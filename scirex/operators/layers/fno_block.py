@@ -65,7 +65,7 @@ class FNOBlock(nn.Module):
         y_s = SpectralConv(
             in_channels=self.hidden_channels, 
             out_channels=self.hidden_channels, 
-            n_modes=self.n_modes
+            n_modes=self.n_modes,
         )(x)
         
         # Step 2: Local feature extraction via Spatial Skip Connection

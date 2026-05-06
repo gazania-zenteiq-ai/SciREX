@@ -1,0 +1,230 @@
+2026-04-20 10:07:13.620777: W external/xla/xla/service/gpu/nvptx_compiler.cc:765] The NVIDIA driver's CUDA version is 12.8 which is older than the ptxas CUDA version (12.9.86). Because the driver is older than the ptxas version, XLA is disabling parallel compilation, which may slow down compilation. You should update your NVIDIA driver or use the NVIDIA-provided CUDA forward compatibility packages.
+Initializing FNO (hidden_channels=128, modes=(24, 24))...
+Generating 2000 training samples and 200 test samples...
+Data shapes: f_train=(2000, 64, 64, 3), u_train=(2000, 64, 64, 1)
+Starting training for 500 epochs (31000 steps)...
+Epoch    0 | Train Rel L2: 7.125668e-01 | Test Rel L2: 0.629058 | Best Rel L2: 0.629058 | LR: 1.00e-03 | Time: 17.65s
+Epoch   10 | Train Rel L2: 5.322142e-01 | Test Rel L2: 0.513561 | Best Rel L2: 0.363613 | LR: 5.00e-03 | Time: 5.21s
+Epoch   20 | Train Rel L2: 4.359580e-01 | Test Rel L2: 0.361923 | Best Rel L2: 0.288126 | LR: 4.99e-03 | Time: 6.20s
+Epoch   30 | Train Rel L2: 3.580491e-01 | Test Rel L2: 0.386894 | Best Rel L2: 0.260864 | LR: 4.97e-03 | Time: 6.17s
+Epoch   40 | Train Rel L2: 4.204099e-01 | Test Rel L2: 0.365841 | Best Rel L2: 0.260864 | LR: 4.94e-03 | Time: 6.20s
+Epoch   50 | Train Rel L2: 4.062788e-01 | Test Rel L2: 0.264837 | Best Rel L2: 0.213763 | LR: 4.89e-03 | Time: 6.18s
+Epoch   60 | Train Rel L2: 2.412942e-01 | Test Rel L2: 0.270798 | Best Rel L2: 0.186185 | LR: 4.84e-03 | Time: 6.16s
+Epoch   70 | Train Rel L2: 3.844094e-01 | Test Rel L2: 0.363815 | Best Rel L2: 0.186185 | LR: 4.78e-03 | Time: 6.18s
+Epoch   80 | Train Rel L2: 5.167826e-01 | Test Rel L2: 0.493385 | Best Rel L2: 0.186185 | LR: 4.71e-03 | Time: 6.14s
+Epoch   90 | Train Rel L2: 4.364233e-01 | Test Rel L2: 0.404715 | Best Rel L2: 0.186185 | LR: 4.64e-03 | Time: 6.13s
+Epoch  100 | Train Rel L2: 3.792277e-01 | Test Rel L2: 0.426671 | Best Rel L2: 0.186185 | LR: 4.55e-03 | Time: 6.16s
+Epoch  110 | Train Rel L2: 2.985682e-01 | Test Rel L2: 0.286413 | Best Rel L2: 0.186185 | LR: 4.46e-03 | Time: 6.16s
+Epoch  120 | Train Rel L2: 4.040647e-01 | Test Rel L2: 0.403198 | Best Rel L2: 0.186185 | LR: 4.35e-03 | Time: 6.13s
+Epoch  130 | Train Rel L2: 5.533326e-01 | Test Rel L2: 0.465601 | Best Rel L2: 0.186185 | LR: 4.24e-03 | Time: 6.14s
+Epoch  140 | Train Rel L2: 3.335916e-01 | Test Rel L2: 0.265440 | Best Rel L2: 0.186185 | LR: 4.13e-03 | Time: 6.14s
+Epoch  150 | Train Rel L2: 2.497748e-01 | Test Rel L2: 0.221871 | Best Rel L2: 0.186185 | LR: 4.00e-03 | Time: 5.18s
+Epoch  160 | Train Rel L2: 1.867286e-01 | Test Rel L2: 0.340556 | Best Rel L2: 0.155570 | LR: 3.87e-03 | Time: 5.18s
+Epoch  170 | Train Rel L2: 3.656162e-01 | Test Rel L2: 0.354822 | Best Rel L2: 0.155570 | LR: 3.74e-03 | Time: 5.18s
+Epoch  180 | Train Rel L2: 2.543153e-01 | Test Rel L2: 0.237013 | Best Rel L2: 0.155570 | LR: 3.60e-03 | Time: 5.19s
+Epoch  190 | Train Rel L2: 3.306906e-01 | Test Rel L2: 0.240133 | Best Rel L2: 0.155570 | LR: 3.45e-03 | Time: 5.18s
+Epoch  200 | Train Rel L2: 2.312611e-01 | Test Rel L2: 0.210017 | Best Rel L2: 0.155570 | LR: 3.30e-03 | Time: 5.18s
+Epoch  210 | Train Rel L2: 1.685685e-01 | Test Rel L2: 0.193363 | Best Rel L2: 0.137404 | LR: 3.15e-03 | Time: 5.18s
+Epoch  220 | Train Rel L2: 2.510440e-01 | Test Rel L2: 0.201927 | Best Rel L2: 0.134451 | LR: 3.00e-03 | Time: 5.18s
+Epoch  230 | Train Rel L2: 1.865287e-01 | Test Rel L2: 0.164320 | Best Rel L2: 0.134451 | LR: 2.84e-03 | Time: 5.18s
+Epoch  240 | Train Rel L2: 1.493773e-01 | Test Rel L2: 0.133056 | Best Rel L2: 0.132324 | LR: 2.68e-03 | Time: 5.19s
+Epoch  250 | Train Rel L2: 1.402277e-01 | Test Rel L2: 0.140904 | Best Rel L2: 0.118738 | LR: 2.52e-03 | Time: 5.18s
+Epoch  260 | Train Rel L2: 1.949679e-01 | Test Rel L2: 0.222828 | Best Rel L2: 0.118285 | LR: 2.37e-03 | Time: 5.18s
+Epoch  270 | Train Rel L2: 1.035000e-01 | Test Rel L2: 0.094186 | Best Rel L2: 0.094186 | LR: 2.21e-03 | Time: 5.17s
+Epoch  280 | Train Rel L2: 9.409669e-02 | Test Rel L2: 0.077791 | Best Rel L2: 0.077385 | LR: 2.05e-03 | Time: 9.43s
+Epoch  290 | Train Rel L2: 1.073049e-01 | Test Rel L2: 0.117889 | Best Rel L2: 0.077385 | LR: 1.90e-03 | Time: 6.17s
+Epoch  300 | Train Rel L2: 1.019823e-01 | Test Rel L2: 0.107672 | Best Rel L2: 0.077385 | LR: 1.74e-03 | Time: 6.18s
+Epoch  310 | Train Rel L2: 7.895032e-02 | Test Rel L2: 0.075060 | Best Rel L2: 0.075060 | LR: 1.59e-03 | Time: 6.13s
+Epoch  320 | Train Rel L2: 7.002374e-02 | Test Rel L2: 0.065110 | Best Rel L2: 0.065110 | LR: 1.45e-03 | Time: 9.43s
+Epoch  330 | Train Rel L2: 8.186257e-02 | Test Rel L2: 0.076244 | Best Rel L2: 0.061706 | LR: 1.31e-03 | Time: 6.19s
+Epoch  340 | Train Rel L2: 8.487593e-02 | Test Rel L2: 0.081073 | Best Rel L2: 0.061706 | LR: 1.17e-03 | Time: 9.43s
+Epoch  350 | Train Rel L2: 6.945803e-02 | Test Rel L2: 0.061907 | Best Rel L2: 0.061706 | LR: 1.04e-03 | Time: 6.21s
+Epoch  360 | Train Rel L2: 5.837483e-02 | Test Rel L2: 0.053258 | Best Rel L2: 0.053258 | LR: 9.11e-04 | Time: 9.32s
+Epoch  370 | Train Rel L2: 5.747056e-02 | Test Rel L2: 0.066860 | Best Rel L2: 0.050833 | LR: 7.92e-04 | Time: 9.08s
+Epoch  380 | Train Rel L2: 5.085958e-02 | Test Rel L2: 0.045671 | Best Rel L2: 0.045671 | LR: 6.80e-04 | Time: 6.14s
+Epoch  390 | Train Rel L2: 4.864148e-02 | Test Rel L2: 0.043937 | Best Rel L2: 0.043937 | LR: 5.75e-04 | Time: 9.35s
+Epoch  400 | Train Rel L2: 4.632745e-02 | Test Rel L2: 0.042484 | Best Rel L2: 0.042484 | LR: 4.77e-04 | Time: 6.13s
+Epoch  410 | Train Rel L2: 4.403670e-02 | Test Rel L2: 0.040436 | Best Rel L2: 0.040436 | LR: 3.88e-04 | Time: 6.13s
+Epoch  420 | Train Rel L2: 4.183153e-02 | Test Rel L2: 0.038835 | Best Rel L2: 0.038835 | LR: 3.08e-04 | Time: 9.40s
+Epoch  430 | Train Rel L2: 4.056826e-02 | Test Rel L2: 0.037703 | Best Rel L2: 0.037686 | LR: 2.36e-04 | Time: 9.36s
+Epoch  440 | Train Rel L2: 3.910832e-02 | Test Rel L2: 0.036804 | Best Rel L2: 0.036445 | LR: 1.73e-04 | Time: 6.13s
+Epoch  450 | Train Rel L2: 3.786456e-02 | Test Rel L2: 0.035237 | Best Rel L2: 0.035204 | LR: 1.20e-04 | Time: 6.17s
+Epoch  460 | Train Rel L2: 3.696883e-02 | Test Rel L2: 0.034379 | Best Rel L2: 0.034379 | LR: 7.62e-05 | Time: 9.38s
+Epoch  470 | Train Rel L2: 3.637820e-02 | Test Rel L2: 0.033893 | Best Rel L2: 0.033893 | LR: 4.22e-05 | Time: 9.36s
+Epoch  480 | Train Rel L2: 3.616149e-02 | Test Rel L2: 0.033653 | Best Rel L2: 0.033645 | LR: 1.82e-05 | Time: 9.41s
+Epoch  490 | Train Rel L2: 3.599777e-02 | Test Rel L2: 0.033528 | Best Rel L2: 0.033528 | LR: 4.08e-06 | Time: 6.13s
+Epoch  499 | Train Rel L2: 3.595111e-02 | Test Rel L2: 0.033532 | Best Rel L2: 0.033523 | LR: 0.00e+00 | Time: 9.39s
+
+Training Complete. Best Test Rel L2: 0.033523
+Total training time: 3930.95s (65.52m)
+Loss curves saved to: /home/sharad/SciREX/experiments/results/poisson2d_fno
+Filename: scripts/train_poisson2d_fno.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   104    165.9 MiB    165.9 MiB           1   @profile
+   105                                         def main():
+   106                                             # 1. Load Configuration
+   107    165.9 MiB      0.0 MiB           1       config = FNO2DConfig()
+   108                                             
+   109                                             # Prng Key
+   110   1306.9 MiB   1141.1 MiB           1       rng = jax.random.PRNGKey(config.seed)
+   111   1315.1 MiB      8.1 MiB           1       rng, init_rng = jax.random.split(rng)
+   112                                             
+   113                                             # 2. Initialize Model
+   114                                             # Using config values directly for better accuracy
+   115   1315.1 MiB      0.0 MiB           1       print(f"Initializing FNO (hidden_channels={config.hidden_channels}, modes={config.n_modes})...")
+   116   1315.1 MiB      0.0 MiB           2       model = FNO(
+   117   1315.1 MiB      0.0 MiB           1           hidden_channels=config.hidden_channels, 
+   118   1315.1 MiB      0.0 MiB           1           n_layers=config.n_layers, 
+   119   1315.1 MiB      0.0 MiB           1           n_modes=config.n_modes, 
+   120   1315.1 MiB      0.0 MiB           1           out_channels=config.out_channels,
+   121   1315.1 MiB      0.0 MiB           1           lifting_channel_ratio=config.lifting_channel_ratio,
+   122   1315.1 MiB      0.0 MiB           1           projection_channel_ratio=config.projection_channel_ratio,
+   123   1315.1 MiB      0.0 MiB           1           use_grid=False, # Data already has grid
+   124   1315.1 MiB      0.0 MiB           1           use_norm=config.use_norm, # CRITICAL: Was missing
+   125   1315.1 MiB      0.0 MiB           1           fno_skip=config.fno_skip,
+   126   1315.1 MiB      0.0 MiB           1           channel_mlp_skip=config.channel_mlp_skip,
+   127   1315.1 MiB      0.0 MiB           1           use_channel_mlp=config.use_channel_mlp,
+   128   1315.1 MiB      0.0 MiB           1           padding=config.domain_padding,
+   129   1315.1 MiB      0.0 MiB           1           activation=nn.gelu
+   130                                             )
+   131                                             
+   132                                             # Optimizer & Scheduler
+   133   1315.1 MiB      0.0 MiB           1       n_train = config.n_train
+   134                                             # Use all data per epoch
+   135   1315.1 MiB      0.0 MiB           1       steps_per_epoch = n_train // config.batch_size
+   136   1315.1 MiB      0.0 MiB           1       setattr(config, "steps_per_epoch_actual", steps_per_epoch)
+   137                                             
+   138   1315.1 MiB      0.0 MiB           1       schedule = make_schedule(config)
+   139   1315.1 MiB      0.0 MiB           1       total_steps = config.epochs * steps_per_epoch
+   140                                             
+   141                                             # Data has 3 channels (1 source + 2 grid)
+   142   1315.1 MiB      0.0 MiB           1       in_channels = 3 
+   143   1315.1 MiB      0.0 MiB           1       nx, ny = config.resolution
+   144   1315.1 MiB      0.0 MiB           1       input_shape = (config.batch_size, nx, ny, in_channels)
+   145                                             
+   146   1694.9 MiB    379.9 MiB           2       state = create_train_state(
+   147   1315.1 MiB      0.0 MiB           1           rng=init_rng, 
+   148   1315.1 MiB      0.0 MiB           1           model=model, 
+   149   1315.1 MiB      0.0 MiB           1           input_shape=input_shape, 
+   150   1315.1 MiB      0.0 MiB           1           learning_rate=schedule, 
+   151   1315.1 MiB      0.0 MiB           1           weight_decay=config.weight_decay
+   152                                             )
+   153                                             
+   154                                             # 4. Pre-generate FIXED training and test datasets
+   155   1694.9 MiB      0.0 MiB           1       n_test = config.n_test
+   156   1694.9 MiB      0.0 MiB           1       print(f"Generating {n_train} training samples and {n_test} test samples...")
+   157   1694.9 MiB      0.0 MiB           1       from scirex.operators.data import random_poisson_batch
+   158                                             
+   159   1822.7 MiB    127.7 MiB           2       f_train, u_train = random_poisson_batch(
+   160   1694.9 MiB      0.0 MiB           1           batch_size=n_train, nx=nx, ny=ny, channels=1, rng_seed=config.seed
+   161                                             )
+   162   1872.6 MiB     49.9 MiB           2       f_test, u_test = random_poisson_batch(
+   163   1822.7 MiB      0.0 MiB           1           batch_size=n_test, nx=nx, ny=ny, channels=1, rng_seed=999
+   164                                             )
+   165                                             
+   166   2000.5 MiB    127.9 MiB           1       f_train = jnp.asarray(f_train)
+   167   2128.5 MiB    128.0 MiB           1       u_train = jnp.asarray(u_train)
+   168   2128.5 MiB      0.0 MiB           1       f_test = jnp.asarray(f_test)
+   169   2128.5 MiB      0.0 MiB           1       u_test = jnp.asarray(u_test)
+   170                                             
+   171                                             # 5. Normalize Data globally
+   172   2003.8 MiB   -124.7 MiB           1       x_normalizer = UnitGaussianNormalizer(f_train)
+   173   2003.9 MiB      0.1 MiB           1       y_normalizer = UnitGaussianNormalizer(u_train)
+   174                                             
+   175   2003.9 MiB      0.0 MiB           1       f_train_encoded = x_normalizer.encode(f_train)
+   176   2004.0 MiB      0.1 MiB           1       u_train_encoded = y_normalizer.encode(u_train)
+   177   2004.0 MiB      0.0 MiB           1       f_test_encoded = x_normalizer.encode(f_test)
+   178                                             
+   179   2004.0 MiB      0.0 MiB           1       test_batch_encoded = {"x": f_test_encoded, "y": y_normalizer.encode(u_test)}
+   180   2004.0 MiB      0.0 MiB           1       print(f"Data shapes: f_train={f_train.shape}, u_train={u_train.shape}")
+   181                                             
+   182                                             # Paths
+   183   2004.0 MiB      0.0 MiB           1       ckpt_dir = os.path.join(project_root, "experiments/checkpoints")
+   184   2004.0 MiB      0.0 MiB           1       os.makedirs(ckpt_dir, exist_ok=True)
+   185   2004.0 MiB      0.0 MiB           1       ckpt_path = os.path.join(ckpt_dir, "poisson2d_fno_params.pkl")
+   186                                         
+   187   2004.0 MiB      0.0 MiB           1       results_dir = os.path.join(project_root, "experiments/results/poisson2d_fno")
+   188   2004.0 MiB      0.0 MiB           1       os.makedirs(results_dir, exist_ok=True)
+   189                                         
+   190   2004.0 MiB      0.0 MiB           1       best_rel_l2 = float("inf")
+   191   2004.0 MiB      0.0 MiB           1       history = {"train_rel_l2": [], "test_rel_l2": []}
+   192                                         
+   193                                             # 5. Training Step (Optimized for Gradient Stability)
+   194   2026.0 MiB      0.0 MiB           2       @jax.jit
+   195   2004.0 MiB      0.0 MiB           1       def train_step_loss(state, batch):
+   196   2026.0 MiB      0.0 MiB           2           def loss_fn(params):
+   197   2028.3 MiB      2.3 MiB           1               pred_encoded, _ = state.apply_fn({"params": params}, batch["x"],mutable=["intermediates"])
+   198   2028.3 MiB      0.0 MiB           1               return lp_loss(pred_encoded, batch["y"])
+   199                                                     # + pde_loss_FNO(model=model,physics = 'Poisson2d', params=params, v_L=intermediate_output["intermediates"]["last"][0])
+   200                                         
+   201   2026.0 MiB      0.0 MiB           1           grad_fn = jax.value_and_grad(loss_fn)
+   202   2029.7 MiB      1.3 MiB           1           loss, grads = grad_fn(state.params)
+   203   2032.5 MiB      2.9 MiB           1           state = state.apply_gradients(grads=grads)
+   204   2032.5 MiB      0.0 MiB           1           return state, {"loss": loss}
+   205                                         
+   206   2004.0 MiB      0.0 MiB           1       print(f"Starting training for {config.epochs} epochs ({total_steps} steps)...")
+   207   2004.0 MiB      0.0 MiB           1       rng_key = jax.random.PRNGKey(config.seed + 1)
+   208                                             
+   209                                             
+   210   2004.0 MiB      0.0 MiB           1       _total_start_time = time.time()
+   211   2858.1 MiB -221716.9 MiB         501       for epoch in range(config.epochs):
+   212   2858.1 MiB -221227.1 MiB         500           epoch_start_time = time.time()
+   213   2858.1 MiB -221227.1 MiB         500           epoch_loss = 0.0
+   214                                                 
+   215                                                 # Shuffle training data each epoch
+   216   2858.1 MiB -221227.1 MiB         500           rng_key, shuffle_key = jax.random.split(rng_key)
+   217   2858.1 MiB -221205.2 MiB         500           perm = jax.random.permutation(shuffle_key, n_train)
+   218   2858.1 MiB -221227.1 MiB         500           f_shuffled = f_train_encoded[perm]
+   219   2858.1 MiB -221227.0 MiB         500           u_shuffled = u_train_encoded[perm]
+   220                                                 
+   221   2858.1 MiB -223547.0 MiB       31500           for step in range(steps_per_epoch):
+   222   2858.1 MiB -17756937.3 MiB       31000               start_idx = step * config.batch_size
+   223   2858.1 MiB -17756937.3 MiB       31000               end_idx = start_idx + config.batch_size
+   224   2858.1 MiB -17756937.3 MiB       31000               batch = {"x": f_shuffled[start_idx:end_idx], "y": u_shuffled[start_idx:end_idx]}
+   225   2282.0 MiB -17823120.9 MiB       31000               state, metrics = train_step_loss(state, batch)
+   226   2282.0 MiB  -2191.7 MiB       31000               epoch_loss += float(metrics["loss"])
+   227                                                     
+   228   2282.0 MiB -287470.7 MiB         500           epoch_time = time.time() - epoch_start_time
+   229   2282.0 MiB    -37.4 MiB         500           avg_train_loss = epoch_loss / steps_per_epoch
+   230                                                 
+   231                                                 # Evaluate on test set
+   232   2282.0 MiB     -0.6 MiB         500           test_pred_encoded = state.apply_fn({"params": state.params}, test_batch_encoded["x"])
+   233   2282.0 MiB    -36.4 MiB         500           test_pred_decoded = y_normalizer.decode(test_pred_encoded)
+   234   2282.0 MiB    -31.6 MiB         500           v_test_l2 = float(lp_loss(test_pred_decoded, u_test))
+   235                                         
+   236   2282.0 MiB    -37.4 MiB         500           history["train_rel_l2"].append(avg_train_loss)
+   237   2282.0 MiB    -37.4 MiB         500           history["test_rel_l2"].append(v_test_l2)
+   238                                                 
+   239   2282.0 MiB    -37.4 MiB         500           if v_test_l2 < best_rel_l2:
+   240   2282.0 MiB    -12.0 MiB         115               best_rel_l2 = v_test_l2
+   241   2858.1 MiB    -24.2 MiB         230               with open(ckpt_path, "wb") as f:
+   242   2858.1 MiB    581.7 MiB         115                   f.write(flax.serialization.to_bytes(state.params))
+   243                                                 
+   244   2858.1 MiB    -25.9 MiB         500           current_lr = schedule(state.step)
+   245                                                 
+   246   2858.1 MiB -221803.3 MiB         500           if epoch % 10 == 0 or epoch == config.epochs - 1:
+   247   2858.0 MiB -109116.3 MiB         255               print(f"Epoch {epoch:4d} | Train Rel L2: {avg_train_loss:.6e} | "
+   248   2858.0 MiB -43612.0 MiB         102                     f"Test Rel L2: {v_test_l2:.6f} | Best Rel L2: {best_rel_l2:.6f} | "
+   249   2858.0 MiB -43612.0 MiB         102                     f"LR: {float(current_lr):.2e} | Time: {epoch_time:.2f}s")
+   250                                                     
+   251   2858.0 MiB -43612.0 MiB         102               with open(os.path.join(results_dir, "fno2d_metrics.json"), "w") as f:
+   252   2858.0 MiB -21806.0 MiB          51                   json.dump(history, f, indent=4)
+   253                                         
+   254   2281.8 MiB   -576.2 MiB           1       _total_end_time = time.time()
+   255   2281.8 MiB      0.0 MiB           1       total_time = _total_end_time - _total_start_time
+   256   2281.8 MiB      0.0 MiB           1       print(f"\nTraining Complete. Best Test Rel L2: {best_rel_l2:.6f}")
+   257   2281.8 MiB      0.0 MiB           1       print(f"Total training time: {total_time:.2f}s ({total_time/60:.2f}m)")
+   258                                         
+   259                                             # 6. Plot Loss Curves
+   260   2281.8 MiB      0.0 MiB           1       plt.figure(figsize=(8, 8))
+   261   2281.8 MiB      0.0 MiB           1       plt.semilogy(range(len(history["train_rel_l2"])), history["train_rel_l2"], label='Train Rel L2')
+   262   2281.8 MiB      0.0 MiB           1       plt.semilogy(range(len(history["test_rel_l2"])), history["test_rel_l2"], label='Test Rel L2', linestyle='--')
+   263   2281.8 MiB      0.0 MiB           1       plt.xlabel('Epoch')
+   264   2281.8 MiB      0.0 MiB           1       plt.ylabel('Relative L2 Error')
+   265   2281.8 MiB      0.0 MiB           1       plt.title('FNO 2D Poisson: Convergence')
+   266   2281.8 MiB      0.0 MiB           1       plt.grid(True, which="both", ls="-", alpha=0.5)
+   267   2281.8 MiB      0.0 MiB           1       plt.legend()
+   268   2291.8 MiB     10.0 MiB           1       plt.savefig(os.path.join(results_dir, "poisson2d_fno_losses.png"), dpi=150)
+   269   2291.8 MiB      0.0 MiB           1       print(f"Loss curves saved to: {results_dir}")

@@ -1,0 +1,228 @@
+Initializing FNO (hidden_channels=128, modes=(24, 24))...
+Generating 2000 training samples and 200 test samples...
+Data shapes: f_train=(2000, 64, 64, 3), u_train=(2000, 64, 64, 1)
+Starting training for 500 epochs (31000 steps)...
+Epoch    0 | Train Rel L2: 1.013392e+06 | Test Rel L2: 1.006335 | Best Rel L2: 1.006335 | LR: 1.00e-03 | Time: 21.92s
+Epoch   10 | Train Rel L2: 1.000007e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 5.00e-03 | Time: 7.31s
+Epoch   20 | Train Rel L2: 1.000014e+00 | Test Rel L2: 1.000002 | Best Rel L2: 0.999045 | LR: 4.99e-03 | Time: 7.33s
+Epoch   30 | Train Rel L2: 1.000016e+00 | Test Rel L2: 0.999999 | Best Rel L2: 0.999045 | LR: 4.97e-03 | Time: 7.32s
+Epoch   40 | Train Rel L2: 1.000005e+00 | Test Rel L2: 0.999998 | Best Rel L2: 0.999045 | LR: 4.94e-03 | Time: 7.32s
+Epoch   50 | Train Rel L2: 9.999975e-01 | Test Rel L2: 0.999989 | Best Rel L2: 0.999045 | LR: 4.89e-03 | Time: 7.32s
+Epoch   60 | Train Rel L2: 9.999950e-01 | Test Rel L2: 0.999984 | Best Rel L2: 0.999045 | LR: 4.84e-03 | Time: 7.31s
+Epoch   70 | Train Rel L2: 9.999901e-01 | Test Rel L2: 0.999973 | Best Rel L2: 0.999045 | LR: 4.78e-03 | Time: 7.33s
+Epoch   80 | Train Rel L2: 9.999769e-01 | Test Rel L2: 0.999953 | Best Rel L2: 0.999045 | LR: 4.71e-03 | Time: 7.31s
+Epoch   90 | Train Rel L2: 9.999805e-01 | Test Rel L2: 0.999950 | Best Rel L2: 0.999045 | LR: 4.64e-03 | Time: 7.33s
+Epoch  100 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.55e-03 | Time: 7.28s
+Epoch  110 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.46e-03 | Time: 7.28s
+Epoch  120 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.35e-03 | Time: 7.27s
+Epoch  130 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.24e-03 | Time: 7.28s
+Epoch  140 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.13e-03 | Time: 7.28s
+Epoch  150 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.00e-03 | Time: 7.27s
+Epoch  160 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.87e-03 | Time: 7.27s
+Epoch  170 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.74e-03 | Time: 7.28s
+Epoch  180 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.60e-03 | Time: 7.28s
+Epoch  190 | Train Rel L2: 1.000002e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.45e-03 | Time: 7.27s
+Epoch  200 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.30e-03 | Time: 7.27s
+Epoch  210 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.15e-03 | Time: 7.27s
+Epoch  220 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.00e-03 | Time: 7.28s
+Epoch  230 | Train Rel L2: 1.000002e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.84e-03 | Time: 7.28s
+Epoch  240 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.68e-03 | Time: 7.28s
+Epoch  250 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.52e-03 | Time: 7.28s
+Epoch  260 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.37e-03 | Time: 7.28s
+Epoch  270 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.21e-03 | Time: 7.28s
+Epoch  280 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.05e-03 | Time: 7.28s
+Epoch  290 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.90e-03 | Time: 7.28s
+Epoch  300 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.74e-03 | Time: 7.27s
+Epoch  310 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.59e-03 | Time: 7.28s
+Epoch  320 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.45e-03 | Time: 7.27s
+Epoch  330 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.31e-03 | Time: 7.27s
+Epoch  340 | Train Rel L2: 1.000007e+00 | Test Rel L2: 1.000002 | Best Rel L2: 0.999045 | LR: 1.17e-03 | Time: 7.29s
+Epoch  350 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.04e-03 | Time: 7.27s
+Epoch  360 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 9.11e-04 | Time: 7.28s
+Epoch  370 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 7.92e-04 | Time: 7.27s
+Epoch  380 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 6.80e-04 | Time: 7.28s
+Epoch  390 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 5.75e-04 | Time: 7.28s
+Epoch  400 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.77e-04 | Time: 7.28s
+Epoch  410 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.88e-04 | Time: 7.27s
+Epoch  420 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 3.08e-04 | Time: 7.28s
+Epoch  430 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 2.36e-04 | Time: 7.27s
+Epoch  440 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.73e-04 | Time: 7.28s
+Epoch  450 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.20e-04 | Time: 7.27s
+Epoch  460 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 7.62e-05 | Time: 7.28s
+Epoch  470 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.22e-05 | Time: 7.28s
+Epoch  480 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 1.82e-05 | Time: 7.28s
+Epoch  490 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 4.08e-06 | Time: 7.28s
+Epoch  499 | Train Rel L2: 1.000000e+00 | Test Rel L2: 1.000000 | Best Rel L2: 0.999045 | LR: 0.00e+00 | Time: 7.27s
+
+Training Complete. Best Test Rel L2: 0.999045
+Total training time: 3946.52s (65.78m)
+Loss curves saved to: /home/sharad/SciREX/experiments/results/poisson2d_fno
+Filename: scripts/train_poisson2d_fno.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   104    165.8 MiB    165.8 MiB           1   @profile
+   105                                         def main():
+   106                                             # 1. Load Configuration
+   107    165.8 MiB      0.0 MiB           1       config = FNO2DConfig()
+   108                                             
+   109                                             # Prng Key
+   110   1305.8 MiB   1140.0 MiB           1       rng = jax.random.PRNGKey(config.seed)
+   111   1314.3 MiB      8.5 MiB           1       rng, init_rng = jax.random.split(rng)
+   112                                             
+   113                                             # 2. Initialize Model
+   114                                             # Using config values directly for better accuracy
+   115   1314.3 MiB      0.0 MiB           1       print(f"Initializing FNO (hidden_channels={config.hidden_channels}, modes={config.n_modes})...")
+   116   1314.3 MiB      0.0 MiB           2       model = FNO(
+   117   1314.3 MiB      0.0 MiB           1           hidden_channels=config.hidden_channels, 
+   118   1314.3 MiB      0.0 MiB           1           n_layers=config.n_layers, 
+   119   1314.3 MiB      0.0 MiB           1           n_modes=config.n_modes, 
+   120   1314.3 MiB      0.0 MiB           1           out_channels=config.out_channels,
+   121   1314.3 MiB      0.0 MiB           1           lifting_channel_ratio=config.lifting_channel_ratio,
+   122   1314.3 MiB      0.0 MiB           1           projection_channel_ratio=config.projection_channel_ratio,
+   123   1314.3 MiB      0.0 MiB           1           use_grid=False, # Data already has grid
+   124   1314.3 MiB      0.0 MiB           1           use_norm=config.use_norm, # CRITICAL: Was missing
+   125   1314.3 MiB      0.0 MiB           1           fno_skip=config.fno_skip,
+   126   1314.3 MiB      0.0 MiB           1           channel_mlp_skip=config.channel_mlp_skip,
+   127   1314.3 MiB      0.0 MiB           1           use_channel_mlp=config.use_channel_mlp,
+   128   1314.3 MiB      0.0 MiB           1           padding=config.domain_padding,
+   129   1314.3 MiB      0.0 MiB           1           activation=nn.gelu
+   130                                             )
+   131                                             
+   132                                             # Optimizer & Scheduler
+   133   1314.3 MiB      0.0 MiB           1       n_train = config.n_train
+   134                                             # Use all data per epoch
+   135   1314.3 MiB      0.0 MiB           1       steps_per_epoch = n_train // config.batch_size
+   136   1314.3 MiB      0.0 MiB           1       setattr(config, "steps_per_epoch_actual", steps_per_epoch)
+   137                                             
+   138   1314.3 MiB      0.0 MiB           1       schedule = make_schedule(config)
+   139   1314.3 MiB      0.0 MiB           1       total_steps = config.epochs * steps_per_epoch
+   140                                             
+   141                                             # Data has 3 channels (1 source + 2 grid)
+   142   1314.3 MiB      0.0 MiB           1       in_channels = 3 
+   143   1314.3 MiB      0.0 MiB           1       nx, ny = config.resolution
+   144   1314.3 MiB      0.0 MiB           1       input_shape = (config.batch_size, nx, ny, in_channels)
+   145                                             
+   146   1709.4 MiB    395.1 MiB           2       state = create_train_state(
+   147   1314.3 MiB      0.0 MiB           1           rng=init_rng, 
+   148   1314.3 MiB      0.0 MiB           1           model=model, 
+   149   1314.3 MiB      0.0 MiB           1           input_shape=input_shape, 
+   150   1314.3 MiB      0.0 MiB           1           learning_rate=schedule, 
+   151   1314.3 MiB      0.0 MiB           1           weight_decay=config.weight_decay
+   152                                             )
+   153                                             
+   154                                             # 4. Pre-generate FIXED training and test datasets
+   155   1709.4 MiB      0.0 MiB           1       n_test = config.n_test
+   156   1709.4 MiB      0.0 MiB           1       print(f"Generating {n_train} training samples and {n_test} test samples...")
+   157   1709.4 MiB      0.0 MiB           1       from scirex.operators.data import random_poisson_batch
+   158                                             
+   159   1837.4 MiB    128.0 MiB           2       f_train, u_train = random_poisson_batch(
+   160   1709.4 MiB      0.0 MiB           1           batch_size=n_train, nx=nx, ny=ny, channels=1, rng_seed=config.seed
+   161                                             )
+   162   1886.9 MiB     49.5 MiB           2       f_test, u_test = random_poisson_batch(
+   163   1837.4 MiB      0.0 MiB           1           batch_size=n_test, nx=nx, ny=ny, channels=1, rng_seed=999
+   164                                             )
+   165                                             
+   166   2015.0 MiB    128.1 MiB           1       f_train = jnp.asarray(f_train)
+   167   2142.9 MiB    127.9 MiB           1       u_train = jnp.asarray(u_train)
+   168   2142.9 MiB      0.0 MiB           1       f_test = jnp.asarray(f_test)
+   169   2142.9 MiB      0.0 MiB           1       u_test = jnp.asarray(u_test)
+   170                                             
+   171                                             # 5. Normalize Data globally
+   172   2018.2 MiB   -124.6 MiB           1       x_normalizer = UnitGaussianNormalizer(f_train)
+   173   2018.4 MiB      0.1 MiB           1       y_normalizer = UnitGaussianNormalizer(u_train)
+   174                                             
+   175   2018.4 MiB      0.0 MiB           1       f_train_encoded = x_normalizer.encode(f_train)
+   176   2018.4 MiB      0.1 MiB           1       u_train_encoded = y_normalizer.encode(u_train)
+   177   2018.4 MiB      0.0 MiB           1       f_test_encoded = x_normalizer.encode(f_test)
+   178                                             
+   179   2018.4 MiB      0.0 MiB           1       test_batch_encoded = {"x": f_test_encoded, "y": y_normalizer.encode(u_test)}
+   180   2018.4 MiB      0.0 MiB           1       print(f"Data shapes: f_train={f_train.shape}, u_train={u_train.shape}")
+   181                                             
+   182                                             # Paths
+   183   2018.4 MiB      0.0 MiB           1       ckpt_dir = os.path.join(project_root, "experiments/checkpoints")
+   184   2018.4 MiB      0.0 MiB           1       os.makedirs(ckpt_dir, exist_ok=True)
+   185   2018.4 MiB      0.0 MiB           1       ckpt_path = os.path.join(ckpt_dir, "poisson2d_fno_params.pkl")
+   186                                         
+   187   2018.4 MiB      0.0 MiB           1       results_dir = os.path.join(project_root, "experiments/results/poisson2d_fno")
+   188   2018.4 MiB      0.0 MiB           1       os.makedirs(results_dir, exist_ok=True)
+   189                                         
+   190   2018.4 MiB      0.0 MiB           1       best_rel_l2 = float("inf")
+   191   2018.4 MiB      0.0 MiB           1       history = {"train_rel_l2": [], "test_rel_l2": []}
+   192                                         
+   193                                             # 5. Training Step (Optimized for Gradient Stability)
+   194   2040.7 MiB      0.0 MiB           2       @jax.jit
+   195   2018.4 MiB      0.0 MiB           1       def train_step_loss(state, batch):
+   196   2040.7 MiB      0.0 MiB           2           def loss_fn(params):
+   197   2043.0 MiB      2.3 MiB           1               pred_encoded, intermediate_output = state.apply_fn({"params": params}, batch["x"],mutable=["intermediates"])
+   198   2045.4 MiB      2.4 MiB           1               return lp_loss(pred_encoded, batch["y"]) + pde_loss_FNO(model=model,physics = 'Poisson2d', params=params, v_L=intermediate_output["intermediates"]["last"][0])
+   199                                         
+   200   2040.7 MiB      0.0 MiB           1           grad_fn = jax.value_and_grad(loss_fn)
+   201   2047.3 MiB      2.0 MiB           1           loss, grads = grad_fn(state.params)
+   202   2049.6 MiB      2.3 MiB           1           state = state.apply_gradients(grads=grads)
+   203   2049.6 MiB      0.0 MiB           1           return state, {"loss": loss}
+   204                                         
+   205   2018.4 MiB      0.0 MiB           1       print(f"Starting training for {config.epochs} epochs ({total_steps} steps)...")
+   206   2018.4 MiB      0.0 MiB           1       rng_key = jax.random.PRNGKey(config.seed + 1)
+   207                                             
+   208                                             
+   209   2018.4 MiB      0.0 MiB           1       _total_start_time = time.time()
+   210   2882.8 MiB -286481.9 MiB         501       for epoch in range(config.epochs):
+   211   2882.8 MiB -286011.9 MiB         500           epoch_start_time = time.time()
+   212   2882.8 MiB -286011.9 MiB         500           epoch_loss = 0.0
+   213                                                 
+   214                                                 # Shuffle training data each epoch
+   215   2882.8 MiB -286011.9 MiB         500           rng_key, shuffle_key = jax.random.split(rng_key)
+   216   2882.8 MiB -285990.0 MiB         500           perm = jax.random.permutation(shuffle_key, n_train)
+   217   2882.8 MiB -286011.8 MiB         500           f_shuffled = f_train_encoded[perm]
+   218   2882.8 MiB -286011.9 MiB         500           u_shuffled = u_train_encoded[perm]
+   219                                                 
+   220   2882.8 MiB -286011.9 MiB       31500           for step in range(steps_per_epoch):
+   221   2882.8 MiB -17803015.2 MiB       31000               start_idx = step * config.batch_size
+   222   2882.8 MiB -17803015.2 MiB       31000               end_idx = start_idx + config.batch_size
+   223   2882.8 MiB -17803015.2 MiB       31000               batch = {"x": f_shuffled[start_idx:end_idx], "y": u_shuffled[start_idx:end_idx]}
+   224   2307.6 MiB -17804089.3 MiB       31000               state, metrics = train_step_loss(state, batch)
+   225   2307.6 MiB    128.1 MiB       31000               epoch_loss += float(metrics["loss"])
+   226                                                     
+   227   2307.6 MiB -287164.0 MiB         500           epoch_time = time.time() - epoch_start_time
+   228   2307.6 MiB      0.0 MiB         500           avg_train_loss = epoch_loss / steps_per_epoch
+   229                                                 
+   230                                                 # Evaluate on test set
+   231   2307.6 MiB     28.5 MiB         500           test_pred_encoded = state.apply_fn({"params": state.params}, test_batch_encoded["x"])
+   232   2307.6 MiB      1.1 MiB         500           test_pred_decoded = y_normalizer.decode(test_pred_encoded)
+   233   2307.6 MiB      6.0 MiB         500           v_test_l2 = float(lp_loss(test_pred_decoded, u_test))
+   234                                         
+   235   2307.6 MiB      0.0 MiB         500           history["train_rel_l2"].append(avg_train_loss)
+   236   2307.6 MiB      0.0 MiB         500           history["test_rel_l2"].append(v_test_l2)
+   237                                                 
+   238   2307.6 MiB      0.0 MiB         500           if v_test_l2 < best_rel_l2:
+   239   2304.7 MiB      0.0 MiB           2               best_rel_l2 = v_test_l2
+   240   2882.8 MiB      0.0 MiB           4               with open(ckpt_path, "wb") as f:
+   241   2882.8 MiB    592.3 MiB           2                   f.write(flax.serialization.to_bytes(state.params))
+   242                                                 
+   243   2882.8 MiB     11.6 MiB         500           current_lr = schedule(state.step)
+   244                                                 
+   245   2882.8 MiB -286587.2 MiB         500           if epoch % 10 == 0 or epoch == config.epochs - 1:
+   246   2880.7 MiB -143445.8 MiB         255               print(f"Epoch {epoch:4d} | Train Rel L2: {avg_train_loss:.6e} | "
+   247   2880.7 MiB -57336.2 MiB         102                     f"Test Rel L2: {v_test_l2:.6f} | Best Rel L2: {best_rel_l2:.6f} | "
+   248   2880.7 MiB -57336.2 MiB         102                     f"LR: {float(current_lr):.2e} | Time: {epoch_time:.2f}s")
+   249                                                     
+   250   2880.7 MiB -57336.2 MiB         102               with open(os.path.join(results_dir, "fno2d_metrics.json"), "w") as f:
+   251   2880.7 MiB -28668.1 MiB          51                   json.dump(history, f, indent=4)
+   252                                         
+   253   2307.6 MiB   -575.3 MiB           1       _total_end_time = time.time()
+   254   2307.6 MiB      0.0 MiB           1       total_time = _total_end_time - _total_start_time
+   255   2307.6 MiB      0.0 MiB           1       print(f"\nTraining Complete. Best Test Rel L2: {best_rel_l2:.6f}")
+   256   2307.6 MiB      0.0 MiB           1       print(f"Total training time: {total_time:.2f}s ({total_time/60:.2f}m)")
+   257                                         
+   258                                             # 6. Plot Loss Curves
+   259   2307.8 MiB      0.2 MiB           1       plt.figure(figsize=(8, 8))
+   260   2307.8 MiB      0.0 MiB           1       plt.semilogy(range(len(history["train_rel_l2"])), history["train_rel_l2"], label='Train Rel L2')
+   261   2307.8 MiB      0.0 MiB           1       plt.semilogy(range(len(history["test_rel_l2"])), history["test_rel_l2"], label='Test Rel L2', linestyle='--')
+   262   2307.8 MiB      0.0 MiB           1       plt.xlabel('Epoch')
+   263   2307.8 MiB      0.0 MiB           1       plt.ylabel('Relative L2 Error')
+   264   2307.8 MiB      0.0 MiB           1       plt.title('FNO 2D Poisson: Convergence')
+   265   2307.8 MiB      0.0 MiB           1       plt.grid(True, which="both", ls="-", alpha=0.5)
+   266   2307.8 MiB      0.0 MiB           1       plt.legend()
+   267   2320.0 MiB     12.3 MiB           1       plt.savefig(os.path.join(results_dir, "poisson2d_fno_losses.png"), dpi=150)
+   268   2320.0 MiB      0.0 MiB           1       print(f"Loss curves saved to: {results_dir}")
