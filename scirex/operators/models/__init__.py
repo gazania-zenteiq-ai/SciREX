@@ -27,4 +27,6 @@ Model architectures for Neural Operators.
 """
 
 from .fno import FNO
+from .hno import HNO
+from .nu_hno import NonUniformHNO, encode_scattered_to_grid, decode_grid_to_scattered
 # from .wno import WNO1D, WNO2D, FWNO2D

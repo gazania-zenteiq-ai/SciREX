@@ -4,12 +4,13 @@ from scipy.interpolate import RBFInterpolator
 import matplotlib.pyplot as plt
 import sys
 import time
+import os
 
 def convert_grid(input_file, output_file, res_r, res_theta):
     print(f"Loading data from {input_file}...")
     try:
-        # Assuming CSV format. Adjust if it's space-separated (e.g., delim_whitespace=True)
-        df = pd.read_csv(input_file)
+        # Load the data using whitespace separator as the input files are tab/space separated
+        df = pd.read_csv(input_file, sep='\s+')
     except Exception as e:
         print(f"Error loading {input_file}: {e}")
         sys.exit(1)
@@ -27,6 +28,13 @@ def convert_grid(input_file, output_file, res_r, res_theta):
         print("Calculating r and theta from x and y...")
         df['r'] = np.sqrt(df['x']**2 + df['y']**2)
         df['theta'] = np.arctan2(df['y'], df['x'])
+
+    # Drop duplicates to avoid Singular Matrix error in RBFInterpolator
+    initial_count = len(df)
+    df.drop_duplicates(subset=['r', 'theta'], inplace=True)
+    final_count = len(df)
+    if initial_count != final_count:
+        print(f"Dropped {initial_count - final_count} duplicate points.")
 
     print(f"Data successfully loaded. Shape: {df.shape}")
 
@@ -97,6 +105,7 @@ def convert_grid(input_file, output_file, res_r, res_theta):
 
     # Save to the output file
     print(f"\nSaving results to {output_file}...")
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     out_df.to_csv(output_file, index=False)
     print("Done!")
 
@@ -104,50 +113,76 @@ def convert_grid(input_file, output_file, res_r, res_theta):
     # Visualization of the Grid
     # ==========================================
     print("\nGenerating visualization...")
-    plt.figure(figsize=(14, 6))
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     
-    # Plot 1: Original non-uniform points
-    plt.subplot(1, 2, 1)
-    # Using 'z' (index 2 in features) for color mapping
-    plt.scatter(coords[:, 0], coords[:, 1], c=features[:, 2], cmap='viridis', s=15, alpha=0.8)
-    plt.title('Original Non-Uniform Grid (Colored by z)')
-    plt.xlabel('r')
-    plt.ylabel('theta')
-    plt.colorbar(label='z')
-    plt.grid(True, linestyle='--', alpha=0.5)
+    # --- ROW 1: Z Coordinate ---
+    # Plot 1,1: Original non-uniform points (z)
+    ax1 = axes[0, 0]
+    sc1 = ax1.scatter(coords[:, 0], coords[:, 1], c=features[:, 2], cmap='viridis', s=15, alpha=0.8)
+    ax1.set_title('Original Non-Uniform Grid (z)')
+    ax1.set_xlabel('r')
+    ax1.set_ylabel('theta')
+    fig.colorbar(sc1, ax=ax1, label='z')
+    ax1.grid(True, linestyle='--', alpha=0.5)
     
-    # Plot 2: New uniform grid
-    plt.subplot(1, 2, 2)
-    # Reshape interpolated z back to 2D grid for plotting
+    # Plot 1,2: New uniform grid (z)
+    ax2 = axes[0, 1]
     z_uniform = interpolated_features[:, 2].reshape(res_theta, res_r)
-    
-    # Plotting the uniform grid values
-    plt.pcolormesh(R_grid, THETA_grid, z_uniform, cmap='viridis', shading='auto')
-    
-    # Overlay a faint grid to make the "uniform grid" very easily seen
-    # We only draw a subset of lines if the resolution is high so it doesn't become purely white
+    pcm1 = ax2.pcolormesh(R_grid, THETA_grid, z_uniform, cmap='viridis', shading='auto')
+    ax2.set_title('Interpolated Uniform Grid (z)')
+    ax2.set_xlabel('r')
+    ax2.set_ylabel('theta')
+    fig.colorbar(pcm1, ax=ax2, label='z')
+
+    # Overlay grid lines on ax2
     step_r = max(1, res_r // 30)
     step_theta = max(1, res_theta // 30)
     for r_val in r_uniform[::step_r]:
-        plt.axvline(x=r_val, color='white', alpha=0.3, linestyle='-', linewidth=0.5)
+        ax2.axvline(x=r_val, color='white', alpha=0.2, linestyle='-', linewidth=0.5)
     for t_val in theta_uniform[::step_theta]:
-        plt.axhline(y=t_val, color='white', alpha=0.3, linestyle='-', linewidth=0.5)
+        ax2.axhline(y=t_val, color='white', alpha=0.2, linestyle='-', linewidth=0.5)
+
+    # --- ROW 2: Az Field ---
+    # Plot 2,1: Original non-uniform points (Az)
+    ax3 = axes[1, 0]
+    sc2 = ax3.scatter(coords[:, 0], coords[:, 1], c=features[:, 5], cmap='inferno', s=15, alpha=0.8)
+    ax3.set_title('Original Non-Uniform Grid (Az)')
+    ax3.set_xlabel('r')
+    ax3.set_ylabel('theta')
+    fig.colorbar(sc2, ax=ax3, label='Az')
+    ax3.grid(True, linestyle='--', alpha=0.5)
+
+    # Plot 2,2: New uniform grid (Az)
+    ax4 = axes[1, 1]
+    az_uniform = interpolated_features[:, 5].reshape(res_theta, res_r)
+    pcm2 = ax4.pcolormesh(R_grid, THETA_grid, az_uniform, cmap='inferno', shading='auto')
+    ax4.set_title('Interpolated Uniform Grid (Az)')
+    ax4.set_xlabel('r')
+    ax4.set_ylabel('theta')
+    fig.colorbar(pcm2, ax=ax4, label='Az')
+
+    # Overlay grid lines on ax4
+    for r_val in r_uniform[::step_r]:
+        ax4.axvline(x=r_val, color='white', alpha=0.2, linestyle='-', linewidth=0.5)
+    for t_val in theta_uniform[::step_theta]:
+        ax4.axhline(y=t_val, color='white', alpha=0.2, linestyle='-', linewidth=0.5)
         
-    plt.title('Interpolated Uniform Grid (Colored by z)')
-    plt.xlabel('r')
-    plt.ylabel('theta')
-    plt.colorbar(label='z')
-    
     plt.tight_layout()
+    
+    # Save the plot in the same directory as the output file
+    plot_path = os.path.splitext(output_file)[0] + "_comparison.png"
+    print(f"Saving visualization to {plot_path}...")
+    plt.savefig(plot_path, dpi=300)
+    
     plt.show()
 
 if __name__ == '__main__':
     # ==========================================
     # SET YOUR FILE PATHS AND PARAMETERS HERE
     # ==========================================
-    INPUT_FILE = "data/20250804_stator_magnetOD_28_1_Az_30d.txt"     # <-- Change this to your input file
-    OUTPUT_FILE = "data/20250804_stator_magnetOD_28_1_Az_30d_uniform.csv"  # <-- Change this to your desired output file
-    RESOLUTION_R = 1000
-    RESOLUTION_THETA = 1000
+    INPUT_FILE = "Project_data/varying_diameter/20250820_stator_magnetOD_34_1_Az_30d.txt"     # <-- Change this to your input file
+    OUTPUT_FILE = "Project_data/varying_diameter/uniform/20250820_stator_magnetOD_34_1_Az_30d_uniform.csv"  # <-- Change this to your desired output file
+    RESOLUTION_R = 128
+    RESOLUTION_THETA = 128
     
     convert_grid(INPUT_FILE, OUTPUT_FILE, RESOLUTION_R, RESOLUTION_THETA)

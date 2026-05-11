@@ -46,7 +46,7 @@ experiments/darcy_wno/*
 scirex/operators/data/darcy/*
 scirex/operators/layers/wavelet/*
 scirex/operators/models/wno/*
-
+data
 scirex/losses/tests/*
 
 scripts/darcy/*
@@ -99,6 +99,8 @@ output/
 
 results.png
 lib64
+
+Project_data
 
 
 # ignore .mat .py
