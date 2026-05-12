@@ -27,41 +27,39 @@ from flax import linen as nn
 import jax.numpy as jnp
 from .channel_mlp import ChannelMLP
 
+
 class IntegralTransform(nn.Module):
-    """
-    Integral Kernel Transform (GNO-style).
-    
-    Computes \int_{D} k(x, y, f(y)) * f(y) dy or variants.
-    
-    NOTE: This layer is NOT used by the FNO models. It is provided as
-    a skeleton / placeholder for future Graph Neural Operator (GNO)
-    implementations in SciREX. A full GNO implementation requires
-    graph-based scatter/gather operations; for grid-based operator
-    learning, the FNO uses SpectralConv instead.
-    """
+    """Integral Kernel Transform (GNO-style)."""
+
     channels: int
-    transform_type: str = "linear" # linear, nonlinear
+    transform_type: str = "linear"  # linear, nonlinear
     activation: Callable = nn.gelu
 
     @nn.compact
-    def __call__(self, x: jnp.ndarray, y: Optional[jnp.ndarray] = None, 
-                 f_y: Optional[jnp.ndarray] = None, weights: Optional[jnp.ndarray] = None) -> jnp.ndarray:
-        """
-        Generic kernel integral transform.
-        Logic:
-        1. Parametrize kernel k via a ChannelMLP
-        2. Aggregate information from neighbors
-        """
-                     
+    def __call__(
+        self,
+        x: jnp.ndarray,
+        y: Optional[jnp.ndarray] = None,
+        f_y: Optional[jnp.ndarray] = None,
+        weights: Optional[jnp.ndarray] = None,
+    ) -> jnp.ndarray:
+        """Generic kernel integral transform."""
+        # Note: A full GNO implementation in JAX typically requires
+        # graph-based operations (scatter/gather).
+        # For now, we provide the architectural skeleton matching neuraloperator.
+
+        # In a standard FNO (grid), we use SpectralConv instead of this explicit form.
+        # This layer acts as a placeholder/base for GNO implementations in SciREX.
+
         # Example of a pointwise kernel approximation if used on grids:
         kernel_branch = ChannelMLP(
             out_channels=self.channels,
             hidden_channels=self.channels * 2,
             n_layers=2,
-            activation=self.activation
+            activation=self.activation,
         )(x)
-        
+
         if f_y is not None:
             return kernel_branch * f_y
-            
+
         return kernel_branch

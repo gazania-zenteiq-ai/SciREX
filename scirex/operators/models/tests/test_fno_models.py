@@ -22,11 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for the FNO model architecture.
-Verifies forward pass shapes and parameter consistency for both 2D and 3D
-using the single unified FNO class with different n_modes.
-"""
+"""Unit tests for the FNO model architecture."""
 
 import os
 import sys
@@ -41,6 +37,7 @@ import jax.numpy as jnp
 import pytest
 from scirex.operators.models.fno import FNO
 
+
 @pytest.mark.parametrize("n_modes", [(8, 8), (4, 4)])
 @pytest.mark.parametrize("hidden_channels", [32, 64])
 def test_fno_2d_forward(n_modes, hidden_channels):
@@ -49,19 +46,20 @@ def test_fno_2d_forward(n_modes, hidden_channels):
     batch, nx, ny, in_channels = 2, 16, 16, 1
     n_layers = 4
     out_channels = 1
-    
+
     model = FNO(
-        hidden_channels=hidden_channels, 
-        n_layers=n_layers, 
-        n_modes=n_modes, 
-        out_channels=out_channels
+        hidden_channels=hidden_channels,
+        n_layers=n_layers,
+        n_modes=n_modes,
+        out_channels=out_channels,
     )
     x = jnp.ones((batch, nx, ny, in_channels))
-    
+
     params = model.init(rng, x)
     y = model.apply(params, x)
-    
+
     assert y.shape == (batch, nx, ny, out_channels)
+
 
 @pytest.mark.parametrize("padding", [0.0, 0.1])
 def test_fno_3d_forward(padding):
@@ -71,20 +69,21 @@ def test_fno_3d_forward(padding):
     hidden_channels, n_layers = 16, 2
     n_modes = (4, 4, 4)
     out_channels = 1
-    
+
     model = FNO(
-        hidden_channels=hidden_channels, 
-        n_layers=n_layers, 
-        n_modes=n_modes, 
+        hidden_channels=hidden_channels,
+        n_layers=n_layers,
+        n_modes=n_modes,
         out_channels=out_channels,
-        padding=padding
+        padding=padding,
     )
     x = jnp.ones((batch, nx, ny, nz, in_channels))
-    
+
     params = model.init(rng, x)
     y = model.apply(params, x)
-    
+
     assert y.shape == (batch, nx, ny, nz, out_channels)
+
 
 def test_fno_variable_channels():
     """Test FNO with different input and output channels (2D)."""
@@ -93,21 +92,22 @@ def test_fno_variable_channels():
     hidden_channels, n_layers = 32, 2
     n_modes = (4, 4)
     out_channels = 5
-    
+
     model = FNO(
-        hidden_channels=hidden_channels, 
-        n_layers=n_layers, 
-        n_modes=n_modes, 
-        out_channels=out_channels
+        hidden_channels=hidden_channels,
+        n_layers=n_layers,
+        n_modes=n_modes,
+        out_channels=out_channels,
     )
     x = jnp.ones((batch, nx, ny, in_channels))
-    
+
     params = model.init(rng, x)
     y = model.apply(params, x)
-    
+
     assert y.shape == (batch, nx, ny, out_channels)
 
 
 if __name__ == "__main__":
     import pytest
+
     sys.exit(pytest.main([__file__, "-v", "-c", "/dev/null"]))

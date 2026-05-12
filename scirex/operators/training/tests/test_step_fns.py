@@ -46,9 +46,7 @@ def model_and_state(rng):
         out_channels=1,
     )
     input_shape = (2, 16, 16, 1)
-    state = create_train_state(
-        rng, model, input_shape, learning_rate=1e-3
-    )
+    state = create_train_state(rng, model, input_shape, learning_rate=1e-3)
     return model, state
 
 
@@ -67,6 +65,7 @@ def mse_loss(preds, targets):
 
 # ─── train_step tests ─────────────────────────────────────────────────────────
 
+
 class TestTrainStep:
     """Tests for the train_step function."""
 
@@ -81,7 +80,9 @@ class TestTrainStep:
         """The returned loss should be a scalar."""
         _, state = model_and_state
         _, metrics = train_step(state, dummy_batch, mse_loss)
-        assert metrics["loss"].shape == (), f"Loss should be scalar, got shape {metrics['loss'].shape}"
+        assert (
+            metrics["loss"].shape == ()
+        ), f"Loss should be scalar, got shape {metrics['loss'].shape}"
 
     def test_loss_is_finite(self, model_and_state, dummy_batch):
         """The returned loss should be a finite number."""
@@ -112,8 +113,7 @@ class TestTrainStep:
         new_leaves = jax.tree_util.tree_leaves(new_state.params)
 
         any_changed = any(
-            not jnp.allclose(old, new)
-            for old, new in zip(old_leaves, new_leaves)
+            not jnp.allclose(old, new) for old, new in zip(old_leaves, new_leaves)
         )
         assert any_changed, "Parameters should change after a training step"
 
@@ -151,6 +151,7 @@ class TestTrainStep:
 
 # ─── eval_step tests ──────────────────────────────────────────────────────────
 
+
 class TestEvalStep:
     """Tests for the eval_step function."""
 
@@ -178,15 +179,17 @@ class TestEvalStep:
         """Predictions should have the same shape as the target."""
         _, state = model_and_state
         result = eval_step(state, dummy_batch, mse_loss)
-        assert result["preds"].shape == dummy_batch["y"].shape, (
-            f"Preds shape {result['preds'].shape} != target shape {dummy_batch['y'].shape}"
-        )
+        assert (
+            result["preds"].shape == dummy_batch["y"].shape
+        ), f"Preds shape {result['preds'].shape} != target shape {dummy_batch['y'].shape}"
 
     def test_preds_are_finite(self, model_and_state, dummy_batch):
         """Predictions should be finite values."""
         _, state = model_and_state
         result = eval_step(state, dummy_batch, mse_loss)
-        assert jnp.all(jnp.isfinite(result["preds"])), "Predictions contain non-finite values"
+        assert jnp.all(
+            jnp.isfinite(result["preds"])
+        ), "Predictions contain non-finite values"
 
     def test_eval_does_not_modify_state(self, model_and_state, dummy_batch):
         """eval_step should NOT change the model parameters (inference only)."""

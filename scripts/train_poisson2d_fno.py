@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 import json
 
 from scirex.operators.models.fno import FNO
-from scirex.operators.training import create_train_state, TrainState
+from scirex.operators.training import create_train_state, TrainState, UnitGaussianNormalizer
 from scirex.operators.losses import mse, lp_loss
 from scirex.operators.data import random_poisson_batch
 from configs.poisson_fno_config import FNO2DConfig
@@ -55,116 +55,109 @@ from configs.poisson_fno_config import FNO2DConfig
 
 def make_schedule(config: FNO2DConfig):
     """Create learning rate schedule with Linear Warmup and Cosine Decay."""
-    spe = getattr(config, "steps_per_epoch_actual", config.steps_per_epoch)
-    total_steps = config.epochs * spe
+    c_opt = config.opt
+    spe = getattr(c_opt, "steps_per_epoch_actual", c_opt.steps_per_epoch)
+    total_steps = c_opt.epochs * spe
     
     # Fixed warmup: ~10 epochs worth of steps
     warmup_steps = min(310, total_steps // 10)
     
-    if config.scheduler_type == "cosine":
-        cosine_decay_steps = config.cosine_decay_epochs * spe - warmup_steps
+    if c_opt.scheduler_type == "cosine":
+        cosine_decay_steps = c_opt.cosine_decay_epochs * spe - warmup_steps
         cosine_decay_steps = max(cosine_decay_steps, 1)  # safety
         
         cosine_schedule = optax.cosine_decay_schedule(
-            init_value=config.learning_rate,
+            init_value=c_opt.learning_rate,
             decay_steps=cosine_decay_steps,
             alpha=0.0
         )
         schedule = optax.join_schedules(
             schedules=[
-                optax.linear_schedule(0.0, config.learning_rate, warmup_steps),
+                optax.linear_schedule(0.0, c_opt.learning_rate, warmup_steps),
                 cosine_schedule
             ],
             boundaries=[warmup_steps]
         )
-    elif config.scheduler_type == "step":
+    elif c_opt.scheduler_type == "step":
         scales = {}
-        decay_steps = config.scheduler_step_size * spe
-        num_decays = config.epochs // config.scheduler_step_size
+        decay_steps = c_opt.scheduler_step_size * spe
+        num_decays = c_opt.epochs // c_opt.scheduler_step_size
         
         current_scale = 1.0
         for i in range(1, num_decays + 1):
             boundary = i * decay_steps
-            current_scale *= config.scheduler_gamma
+            current_scale *= c_opt.scheduler_gamma
             scales[boundary] = current_scale
             
         schedule = optax.piecewise_constant_schedule(
-            init_value=config.learning_rate,
+            init_value=c_opt.learning_rate,
             boundaries_and_scales=scales
         )
     else:
-        raise ValueError(f"Unknown scheduler_type: {config.scheduler_type}")
+        raise ValueError(f"Unknown scheduler_type: {c_opt.scheduler_type}")
     
     return schedule
 
-class UnitGaussianNormalizer:
-    def __init__(self, x, eps=1e-5):
-        self.mean = jnp.mean(x, axis=(0, 1, 2), keepdims=True)
-        self.std = jnp.std(x, axis=(0, 1, 2), keepdims=True)
-        self.eps = eps
-
-    def encode(self, x):
-        return (x - self.mean) / (self.std + self.eps)
-
-    def decode(self, x):
-        return x * (self.std + self.eps) + self.mean
 
 def main():
     # 1. Load Configuration
     config = FNO2DConfig()
+    c_mod = config.model
+    c_opt = config.opt
+    c_data = config.data
     
     # Prng Key
-    rng = jax.random.PRNGKey(config.seed)
+    rng = jax.random.PRNGKey(c_data.seed)
     rng, init_rng = jax.random.split(rng)
     
     # 2. Initialize Model
     # Using config values directly for better accuracy
-    print(f"Initializing FNO (hidden_channels={config.hidden_channels}, modes={config.n_modes})...")
+    print(f"Initializing FNO (hidden_channels={c_mod.hidden_channels}, modes={c_mod.n_modes})...")
     model = FNO(
-        hidden_channels=config.hidden_channels, 
-        n_layers=config.n_layers, 
-        n_modes=config.n_modes, 
-        out_channels=config.out_channels,
-        lifting_channel_ratio=config.lifting_channel_ratio,
-        projection_channel_ratio=config.projection_channel_ratio,
+        hidden_channels=c_mod.hidden_channels, 
+        n_layers=c_mod.n_layers, 
+        n_modes=c_mod.n_modes, 
+        out_channels=c_mod.out_channels,
+        lifting_channel_ratio=c_mod.lifting_channel_ratio,
+        projection_channel_ratio=c_mod.projection_channel_ratio,
         use_grid=False, # Data already has grid
-        use_norm=config.use_norm, # CRITICAL: Was missing
-        fno_skip=config.fno_skip,
-        channel_mlp_skip=config.channel_mlp_skip,
-        use_channel_mlp=config.use_channel_mlp,
-        padding=config.domain_padding,
+        use_norm=c_mod.use_norm, # CRITICAL: Was missing
+        fno_skip=c_mod.fno_skip,
+        channel_mlp_skip=c_mod.channel_mlp_skip,
+        use_channel_mlp=c_mod.use_channel_mlp,
+        padding=c_mod.domain_padding,
         activation=nn.gelu
     )
     
     # Optimizer & Scheduler
-    n_train = config.n_train
+    n_train = c_data.n_train
     # Use all data per epoch
-    steps_per_epoch = n_train // config.batch_size
-    setattr(config, "steps_per_epoch_actual", steps_per_epoch)
+    steps_per_epoch = n_train // c_data.batch_size
+    setattr(c_opt, "steps_per_epoch_actual", steps_per_epoch)
     
     schedule = make_schedule(config)
-    total_steps = config.epochs * steps_per_epoch
+    total_steps = c_opt.epochs * steps_per_epoch
     
     # Data has 3 channels (1 source + 2 grid)
     in_channels = 3 
-    nx, ny = config.resolution
-    input_shape = (config.batch_size, nx, ny, in_channels)
+    nx, ny = c_data.resolution
+    input_shape = (c_data.batch_size, nx, ny, in_channels)
     
     state = create_train_state(
         rng=init_rng, 
         model=model, 
         input_shape=input_shape, 
         learning_rate=schedule, 
-        weight_decay=config.weight_decay
+        weight_decay=c_opt.weight_decay
     )
     
     # 4. Pre-generate FIXED training and test datasets
-    n_test = config.n_test
+    n_test = c_data.n_test
     print(f"Generating {n_train} training samples and {n_test} test samples...")
     from scirex.operators.data import random_poisson_batch
     
     f_train, u_train = random_poisson_batch(
-        batch_size=n_train, nx=nx, ny=ny, channels=1, rng_seed=config.seed
+        batch_size=n_train, nx=nx, ny=ny, channels=1, rng_seed=c_data.seed
     )
     f_test, u_test = random_poisson_batch(
         batch_size=n_test, nx=nx, ny=ny, channels=1, rng_seed=999
@@ -215,12 +208,12 @@ def main():
         state = state.apply_gradients(grads=grads)
         return state, {"loss": loss}
 
-    print(f"Starting training for {config.epochs} epochs ({total_steps} steps)...")
-    rng_key = jax.random.PRNGKey(config.seed + 1)
+    print(f"Starting training for {c_opt.epochs} epochs ({total_steps} steps)...")
+    rng_key = jax.random.PRNGKey(c_data.seed + 1)
     
     
     _total_start_time = time.time()
-    for epoch in range(config.epochs):
+    for epoch in range(c_opt.epochs):
         epoch_start_time = time.time()
         epoch_loss = 0.0
         
@@ -231,8 +224,8 @@ def main():
         u_shuffled = u_train_encoded[perm]
         
         for step in range(steps_per_epoch):
-            start_idx = step * config.batch_size
-            end_idx = start_idx + config.batch_size
+            start_idx = step * c_data.batch_size
+            end_idx = start_idx + c_data.batch_size
             batch = {"x": f_shuffled[start_idx:end_idx], "y": u_shuffled[start_idx:end_idx]}
             state, metrics = train_step_lploss(state, batch)
             epoch_loss += float(metrics["loss"])
@@ -255,7 +248,7 @@ def main():
         
         current_lr = schedule(state.step)
         
-        if epoch % 10 == 0 or epoch == config.epochs - 1:
+        if epoch % 10 == 0 or epoch == c_opt.epochs - 1:
             print(f"Epoch {epoch:4d} | Train Rel L2: {avg_train_loss:.6e} | "
                   f"Test Rel L2: {v_test_l2:.6f} | Best Rel L2: {best_rel_l2:.6f} | "
                   f"LR: {float(current_lr):.2e} | Time: {epoch_time:.2f}s")

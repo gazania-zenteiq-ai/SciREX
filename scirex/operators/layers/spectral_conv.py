@@ -22,92 +22,83 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-from typing import Tuple
-from flax import linen as nn
 import jax
 import jax.numpy as jnp
+from flax import linen as nn
+from typing import Tuple, Optional
+import itertools
+
 
 class SpectralConv(nn.Module):
-    """
-    N-dimensional Spectral Convolution layer (supports 2D and 3D).
-    
-    The dimensionality is automatically inferred from the length of ``n_modes``:
-      - ``len(n_modes) == 2`` → 2D spectral convolution (RFFT2)
-      - ``len(n_modes) == 3`` → 3D spectral convolution (RFFT3)
-    
-    This layer performs a convolution in the Fourier domain by:
-    1. Transforming the input to the frequency domain using a Real Fast Fourier Transform (RFFT).
-    2. Multiplying the lower Fourier modes by learnable complex weights.
-    3. Inverse transforming the filtered signal back to the spatial domain.
-    
-    This operation provides a global receptive field, as each Fourier mode 
-    carries information from the entire spatial domain.
-    
-    Attributes:
-        in_channels (int): Number of input channels.
-        out_channels (int): Number of output channels.
-        n_modes (Tuple[int, ...]): Number of Fourier modes to retain for each spatial dimension.
-            Length 2 for 2D, length 3 for 3D.
-        init_std (float, optional): Standard deviation for weight initialization.
-    """
+    """N-dimensional Spectral Convolution layer (supports 1D, 2D, 3D, and beyond)."""
+
     in_channels: int
     out_channels: int
     n_modes: Tuple[int, ...]
-    init_std: float = None
+    init_std: Optional[float] = None
 
     @nn.compact
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         # x shape: (batch, dim1, dim2, ..., dimN, in_channels)
         n_dim = len(self.n_modes)
+        batch = x.shape[0]
+        spatial_dims = x.shape[1:-1]
+
+        # 0. Safety Check: Ensure requested modes don't exceed Nyquist limits
+        for i, (mode, dim) in enumerate(zip(self.n_modes, spatial_dims)):
+            # The last dimension is roughly halved due to RFFT
+            max_modes = dim // 2 + 1 if i == n_dim - 1 else dim
+            if mode > max_modes:
+                raise ValueError(
+                    f"n_modes[{i}]={mode} exceeds maximum allowed modes ({max_modes}) "
+                    f"for spatial dimension size {dim}."
+                )
+
         # 1. FFT
         axes = tuple(range(1, n_dim + 1))
-        # Use norm="forward" for parity with neuraloperator
-        x_ft = jnp.fft.rfftn(x, axes=axes, norm="forward")
-        
-        # 2. Initialization scale - Aligned with neuraloperator Xavier-style
-        if self.init_std is None:
-            scale = (2.0 / (self.in_channels + self.out_channels)) ** 0.5
-        else:
-            scale = self.init_std
-            
-        # For complex weights, to get total variance of scale^2, 
-        # each component's stddev should be scale / sqrt(2)
-        complex_scale = scale / (2.0**0.5)
+        x_ft = jnp.fft.rfftn(x, axes=axes, norm="ortho")
 
-        # 3. Weights
-        # Non-RFFT dimensions (all except the last one)
-        spatial_dims_ft = list(spatial_dims)
-        spatial_dims_ft[-1] = spatial_dims_ft[-1] // 2 + 1
-        
+        # 2. Weights Initialization
+        scale = 0.05 if self.init_std is None else self.init_std
         weights_shape = (self.in_channels, self.out_channels) + self.n_modes
-        # RFFT dimension (last one) has modes[-1] // 2 + 1 modes if we were filtering there,
-        # but n_modes already refers to active modes.
-        
-        # We need to handle the indexing carefully to match fftshift behavior in N-dims.
-        # For simplicity and parity, we restore the 2D/3D specific implementations 
-        # alongside the generic one, or refine the generic one.
-        # Let's refine the generic one using the "corners" approach but with correct norm and scale.
-        
-        n_corners = 2**(n_dim - 1)
+
+        # For N dimensions, the number of corners in frequency space is 2**(N-1).
+        n_corners = 2 ** (n_dim - 1)
         weights = [
-            self.param(f'weights_{i+1}', jax.nn.initializers.normal(stddev=complex_scale), weights_shape, jnp.complex64)
+            self.param(
+                f"weights_{i+1}",
+                jax.nn.initializers.normal(stddev=scale),
+                weights_shape,
+                jnp.complex64,
+            )
             for i in range(n_corners)
         ]
-        
+
         # Create output tensor in frequency domain
-        out_ft_shape = (batch,) + tuple(spatial_dims_ft) + (self.out_channels,)
+        out_ft_shape = (
+            (batch,)
+            + spatial_dims[:-1]
+            + (spatial_dims[-1] // 2 + 1,)
+            + (self.out_channels,)
+        )
         out_ft = jnp.zeros(out_ft_shape, dtype=jnp.complex64)
-        
-        # Build dynamic einsum string (e.g., N=2 -> "bxyi,ioxy->bxyo")
-        import itertools
-        spatial_letters = "xyzuvw"[:n_dim]
+
+        # 3. Build dynamic einsum string (safely avoids hardcoded letter limits)
+        # We reserve 'b' for batch, 'i' for in_channels, 'o' for out_channels
+        available_letters = "acdefghjklmnpqrstuvwxyz"
+        if n_dim > len(available_letters):
+            raise ValueError(
+                f"Too many spatial dimensions ({n_dim}) for einsum string generation."
+            )
+        spatial_letters = available_letters[:n_dim]
         einsum_str = f"b{spatial_letters}i,io{spatial_letters}->b{spatial_letters}o"
-        
+
+        # 4. Apply Weights to Frequency Corners
         corner_idx = 0
         for signs in itertools.product([1, -1], repeat=n_dim - 1):
             slices_in = [slice(None)]  # batch
-            slices_out = [slice(None)] # batch
-            
+            slices_out = [slice(None)]  # batch
+
             for d, sign in enumerate(signs):
                 modes = self.n_modes[d]
                 if sign == 1:
@@ -116,65 +107,31 @@ class SpectralConv(nn.Module):
                 else:
                     slices_in.append(slice(-modes, None))
                     slices_out.append(slice(-modes, None))
-                    
-            # Last spatial dimension (always positive frequencies for rfft)
-            slices_in.append(slice(None, self.n_modes[-1]))
-            slices_out.append(slice(None, self.n_modes[-1]))
-            
+
+            # Last spatial dimension (always positive frequencies for RFFT)
+            last_modes = self.n_modes[-1]
+            slices_in.append(slice(None, last_modes))
+            slices_out.append(slice(None, last_modes))
+
             # Channel dimension
             slices_in.append(slice(None))
             slices_out.append(slice(None))
-            
-            # Apply einsum for this corner
+
+            # Extract corner, multiply, and inject back
             x_corner = x_ft[tuple(slices_in)]
             w_corner = weights[corner_idx]
-            
-            out_corner = jnp.einsum(einsum_str, x_corner, w_corner)
+
+            # Bypass complex einsum unsupported functionality issue on CPU
+            xr, xi = jnp.real(x_corner), jnp.imag(x_corner)
+            wr, wi = jnp.real(w_corner), jnp.imag(w_corner)
+            out_r = jnp.einsum(einsum_str, xr, wr) - jnp.einsum(einsum_str, xi, wi)
+            out_i = jnp.einsum(einsum_str, xr, wi) + jnp.einsum(einsum_str, xi, wr)
+            out_corner = out_r + 1j * out_i
+
             out_ft = out_ft.at[tuple(slices_out)].set(out_corner)
-            
+
             corner_idx += 1
-            
-        # 4. Inverse FFT
-        x = jnp.fft.irfftn(out_ft, s=spatial_dims, axes=axes, norm="forward")
 
-        # 5. Add learned bias
-        bias = self.param('bias', jax.nn.initializers.zeros, (self.out_channels,))
-        # Expand bias to match (1, 1, ..., 1, channels)
-        bias_shape = (1,) * n_dim + (self.out_channels,)
-        x = x + bias.reshape(bias_shape)
-
+        # 5. Inverse FFT
+        x = jnp.fft.irfftn(out_ft, s=spatial_dims, axes=axes, norm="ortho")
         return x
-
-class SpectralConv2D(nn.Module):
-    """Backward compatibility for 2D spectral convolution."""
-    in_channels: int
-    out_channels: int
-    n_modes: Tuple[int, int]
-    init_std: float = None
-    
-    @nn.compact
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        return SpectralConv(
-            in_channels=self.in_channels,
-            out_channels=self.out_channels,
-            n_modes=self.n_modes,
-            init_std=self.init_std
-        )(x)
-
-class SpectralConv3D(nn.Module):
-    """Backward compatibility for 3D spectral convolution."""
-    in_channels: int
-    out_channels: int
-    n_modes: Tuple[int, int, int]
-    init_std: float = None
-    
-    @nn.compact
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        return SpectralConv(
-            in_channels=self.in_channels,
-            out_channels=self.out_channels,
-            n_modes=self.n_modes,
-            init_std=self.init_std
-        )(x)
-        return x
-

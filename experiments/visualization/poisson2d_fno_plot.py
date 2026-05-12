@@ -43,25 +43,7 @@ from flax import linen as nn
 import json
 
 from scirex.operators.models.fno import FNO
-<<<<<<< HEAD
-from scirex.operators.training import create_train_state
-from scirex.operators.data import random_poisson_batch
-from configs.poisson_fno_config import FNO2DConfig
-
-class UnitGaussianNormalizer:
-    def __init__(self, x, eps=1e-5):
-        self.mean = jnp.mean(x, axis=(0, 1, 2), keepdims=True)
-        self.std = jnp.std(x, axis=(0, 1, 2), keepdims=True)
-        self.eps = eps
-
-    def encode(self, x):
-        return (x - self.mean) / (self.std + self.eps)
-
-    def decode(self, x):
-        return x * (self.std + self.eps) + self.mean
-
-=======
-from scirex.operators.training import create_train_state, GaussianNormalizer
+from scirex.operators.training import create_train_state, UnitGaussianNormalizer
 from scirex.operators.data import random_poisson_batch
 from configs.poisson_fno_config import FNO2DConfig
 
@@ -123,13 +105,8 @@ def main():
     f_train_ref, u_train_ref = random_poisson_batch(
         batch_size=config.n_train, nx=nx, ny=ny, channels=1, rng_seed=config.seed
     )
-<<<<<<< HEAD
     x_normalizer = UnitGaussianNormalizer(f_train_ref)
     y_normalizer = UnitGaussianNormalizer(u_train_ref)
-=======
-    x_normalizer = GaussianNormalizer(f_train_ref)
-    y_normalizer = GaussianNormalizer(u_train_ref)
->>>>>>> 34c69f2967ddf503afb7268be3c85f8b4df4b8d2
 
     # Generate Test Data (different seed)
     f_test, u_test = random_poisson_batch(

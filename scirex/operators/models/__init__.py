@@ -22,10 +22,8 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Model architectures for Neural Operators.
-"""
+"""Model architectures for Neural Operators."""
 
 from .fno import FNO
-from .wno import WNO
-from .transolver import Transolver
+
+# from .wno import WNO1D, WNO2D, FWNO2D

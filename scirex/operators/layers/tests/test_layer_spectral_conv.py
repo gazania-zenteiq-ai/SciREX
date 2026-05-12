@@ -22,12 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for SpectralConv.
-
-Tests are written in N-D style so the layer works for
-arbitrary spatial dimensionalities.
-"""
+"""Unit tests for SpectralConv."""
 
 import jax
 import jax.numpy as jnp
@@ -38,14 +33,14 @@ from scirex.operators.layers.spectral_conv import SpectralConv
 
 # Forward pass N-D
 
+
 @pytest.mark.parametrize(
     "spatial_shape,n_modes",
     [
-        ((16, 16), (6, 6)),       # 2D
-        ((8, 8, 8), (4, 4, 4)),   # 3D
+        ((16, 16), (6, 6)),  # 2D
+        ((8, 8, 8), (4, 4, 4)),  # 3D
     ],
 )
-
 def test_spectral_conv_forward_nd(spatial_shape, n_modes):
     """SpectralConv should preserve spatial dimensions."""
 
@@ -71,6 +66,7 @@ def test_spectral_conv_forward_nd(spatial_shape, n_modes):
 
 # Different channel configurations
 
+
 @pytest.mark.parametrize(
     "in_channels,out_channels",
     [
@@ -78,7 +74,6 @@ def test_spectral_conv_forward_nd(spatial_shape, n_modes):
         (6, 8),
     ],
 )
-
 def test_spectral_conv_channel_variations(in_channels, out_channels):
     """SpectralConv should handle different channel sizes."""
 
@@ -102,6 +97,7 @@ def test_spectral_conv_channel_variations(in_channels, out_channels):
 
 
 # Custom initialization std
+
 
 def test_spectral_conv_custom_init_std():
     """SpectralConv should work with custom initialization scale."""

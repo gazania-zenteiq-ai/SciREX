@@ -22,10 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-`scirex.operators` provides the core neural operator architectures and their 
-constituents.
-"""
+"""`scirex.operators` provides the core neural operator architectures and their"""
 
 # ── Layers ──
 from .layers import (
@@ -41,6 +38,7 @@ from .layers import (
 
 # ── Models ──
 from .models.fno import FNO
+
 # from .models.wno.wno import WNO1D, WNO2D, FWNO2D
 
 # ── Data, Losses, Training ──

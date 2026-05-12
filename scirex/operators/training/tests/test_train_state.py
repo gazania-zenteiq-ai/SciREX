@@ -86,9 +86,7 @@ class TestCreateTrainState:
     def test_forward_pass_with_state(self, rng, simple_model):
         """The state's apply_fn + params should produce a valid forward pass."""
         input_shape = (2, 16, 16, 1)
-        state = create_train_state(
-            rng, simple_model, input_shape, learning_rate=1e-3
-        )
+        state = create_train_state(rng, simple_model, input_shape, learning_rate=1e-3)
         x = jax.random.normal(rng, input_shape)
         preds = state.apply_fn({"params": state.params}, x)
         assert preds.shape == (2, 16, 16, 1), f"Expected (2,16,16,1), got {preds.shape}"
@@ -136,16 +134,14 @@ class TestCreateTrainState:
     def test_apply_gradients_increments_step(self, rng, simple_model):
         """Calling apply_gradients should increment state.step."""
         input_shape = (1, 16, 16, 1)
-        state = create_train_state(
-            rng, simple_model, input_shape, learning_rate=1e-3
-        )
+        state = create_train_state(rng, simple_model, input_shape, learning_rate=1e-3)
 
         # Compute dummy gradients
         x = jax.random.normal(rng, input_shape)
 
         def loss_fn(params):
             preds = state.apply_fn({"params": params}, x)
-            return jnp.mean(preds ** 2)
+            return jnp.mean(preds**2)
 
         grads = jax.grad(loss_fn)(state.params)
         new_state = state.apply_gradients(grads=grads)

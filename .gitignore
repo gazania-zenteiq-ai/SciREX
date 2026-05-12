@@ -107,7 +107,5 @@ lib64
 
 *.mat
 *.npy
-
-# Large data directories
-data/
-scirex/operators/data/mlcfd_data/
+*npz
+*zip

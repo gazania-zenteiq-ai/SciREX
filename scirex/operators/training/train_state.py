@@ -30,48 +30,34 @@ from flax.training import train_state
 # Alias for type hinting
 TrainState = train_state.TrainState
 
+
 def create_train_state(
-    rng: Any, 
-    model: Any, 
-    input_shape: tuple, 
-    learning_rate: Optional[float] = None, 
+    rng: Any,
+    model: Any,
+    input_shape: tuple,
+    learning_rate: Optional[float] = None,
     weight_decay: float = 1e-4,
-    tx: Optional[optax.GradientTransformation] = None
+    tx: Optional[optax.GradientTransformation] = None,
 ) -> TrainState:
-    """
-    Initializes the model parameters and constructs the training state.
-    
-    This factory function handles the initialization of model weights using a 
-    dummy input and sets up a standard AdamW optimizer with gradient 
-    clipping to ensure stable training of neural operators.
-
-    Args:
-        rng (Any): JAX PRNG key for parameter initialization.
-        model (Any): Flax Module instance (e.g., FNO2D or WNO2D).
-        input_shape (tuple): Expected input shape (batch, ..., channels) for initialization.
-        learning_rate (float, optional): Learning rate for the AdamW optimizer.
-        weight_decay (float): L2 regularization factor.
-        tx (optax.GradientTransformation, optional): Custom optimizer chain. 
-
-    Returns:
-        TrainState: An initialized Flax TrainState object.
-    """
+    """Initializes the model parameters and constructs the training state."""
     # 1. Parameter initialization via a dummy forward pass
     dummy = jax.random.normal(rng, input_shape)
     variables = model.init(rng, dummy)
     params = variables["params"]
-    
+
     # 2. Optimizer configuration
     if tx is None:
         if learning_rate is None:
-            raise ValueError("A learning_rate must be provided if no custom optimizer (tx) is specified.")
-        
+            raise ValueError(
+                "A learning_rate must be provided if no custom optimizer (tx) is specified."
+            )
+
         # Standard configuration for Operator Learning: AdamW + Global Gradient Norm Clipping
         tx = optax.chain(
             optax.clip_by_global_norm(1.0),
-            optax.adamw(learning_rate, weight_decay=weight_decay)
+            optax.adamw(learning_rate, weight_decay=weight_decay),
         )
-        
+
     # 3. Create consolidated state
     state = TrainState.create(apply_fn=model.apply, params=params, tx=tx)
     return state

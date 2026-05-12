@@ -22,11 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Core architectural layers for different Neural Operators, including spectral convolutions, 
-channel mlp, padding, embeddings, skip connection, integral transform, different model blocks such as 
-FNOBlock,..., etc. 
-"""
+"""Core architectural layers for different Neural Operators, including spectral convolutions,"""
 
 from .channel_mlp import ChannelMLP
 from .spectral_conv import SpectralConv
@@ -35,8 +31,3 @@ from .embeddings import GridEmbedding
 from .skip_connection import SkipConnection, SoftGating
 from .integral_transform import IntegralTransform
 from .fno_block import FNOBlock
-from .wavelet_conv import WaveletConv
-from .wno_block import WNOBlock
-from .physics_attention import PhysicsAttention
-from .transolver_mlp import TransolverMLP
-from .transolver_block import TransolverBlock

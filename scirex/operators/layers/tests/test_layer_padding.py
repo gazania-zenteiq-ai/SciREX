@@ -22,12 +22,16 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
+<<<<<<< HEAD
 """
 Unit tests for DomainPadding.
 
 Tests are written in N-D style to ensure padding works
 for arbitrary spatial dimensions.
 """
+=======
+"""Unit tests for DomainPadding."""
+>>>>>>> origin/main
 
 import jax.numpy as jnp
 import pytest
@@ -37,6 +41,7 @@ from scirex.operators.layers.padding import DomainPadding
 
 # Forward padding (N-D)
 
+<<<<<<< HEAD
 @pytest.mark.parametrize(
     "spatial_shape,padding",
     [
@@ -45,6 +50,16 @@ from scirex.operators.layers.padding import DomainPadding
     ],
 )
 
+=======
+
+@pytest.mark.parametrize(
+    "spatial_shape,padding",
+    [
+        ((16, 16), 0.25),  # 2D
+        ((8, 8, 8), 0.125),  # 3D
+    ],
+)
+>>>>>>> origin/main
 def test_domain_padding_forward_nd(spatial_shape, padding):
     """Padding should expand spatial dimensions symmetrically."""
 
@@ -68,6 +83,10 @@ def test_domain_padding_forward_nd(spatial_shape, padding):
 
 # Inverse padding (crop)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 @pytest.mark.parametrize(
     "spatial_shape,padding",
     [
@@ -75,7 +94,10 @@ def test_domain_padding_forward_nd(spatial_shape, padding):
         ((8, 8, 8), 0.125),
     ],
 )
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 def test_domain_padding_inverse_nd(spatial_shape, padding):
     """Inverse padding should restore the original tensor."""
 
@@ -96,6 +118,10 @@ def test_domain_padding_inverse_nd(spatial_shape, padding):
 
 # List padding per dimension
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 def test_domain_padding_list_padding():
     """Padding specified per dimension should work."""
 
@@ -119,6 +145,10 @@ def test_domain_padding_list_padding():
 
 # Error handling
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 def test_domain_padding_inverse_requires_shape():
     """Inverse padding must raise error if original_shape is missing."""
 
@@ -129,4 +159,8 @@ def test_domain_padding_inverse_requires_shape():
     padded = model.apply({}, x)
 
     with pytest.raises(ValueError):
+<<<<<<< HEAD
         model.apply({}, padded, inverse=True)
+=======
+        model.apply({}, padded, inverse=True)
+>>>>>>> origin/main

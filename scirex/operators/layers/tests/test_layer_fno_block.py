@@ -22,12 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for FNOBlock.
-
-Tests are written in N-D style to ensure the block works
-for arbitrary spatial dimensionalities.
-"""
+"""Unit tests for FNOBlock."""
 
 import jax
 import jax.numpy as jnp
@@ -36,17 +31,16 @@ import pytest
 from scirex.operators.layers.fno_block import FNOBlock
 
 
-
 # Basic forward pass (N-D)
+
 
 @pytest.mark.parametrize(
     "spatial_shape,n_modes",
     [
-        ((16, 16), (6, 6)),       # 2D
-        ((8, 8, 8), (4, 4, 4)),   # 3D
+        ((16, 16), (6, 6)),  # 2D
+        ((8, 8, 8), (4, 4, 4)),  # 3D
     ],
 )
-
 def test_fno_block_forward_nd(spatial_shape, n_modes):
     """FNOBlock should preserve spatial shape."""
 
@@ -70,6 +64,7 @@ def test_fno_block_forward_nd(spatial_shape, n_modes):
 
 # With normalization
 
+
 @pytest.mark.parametrize(
     "spatial_shape,n_modes",
     [
@@ -77,7 +72,6 @@ def test_fno_block_forward_nd(spatial_shape, n_modes):
         ((6, 6, 6), (3, 3, 3)),
     ],
 )
-
 def test_fno_block_with_norm(spatial_shape, n_modes):
     """FNOBlock should run when normalization is enabled."""
 
@@ -102,6 +96,7 @@ def test_fno_block_with_norm(spatial_shape, n_modes):
 
 # Without ChannelMLP refinement
 
+
 @pytest.mark.parametrize(
     "spatial_shape,n_modes",
     [
@@ -109,7 +104,6 @@ def test_fno_block_with_norm(spatial_shape, n_modes):
         ((6, 6, 6), (3, 3, 3)),
     ],
 )
-
 def test_fno_block_without_channel_mlp(spatial_shape, n_modes):
     """FNOBlock should run when ChannelMLP is disabled."""
 
@@ -132,14 +126,13 @@ def test_fno_block_without_channel_mlp(spatial_shape, n_modes):
     assert y.shape == x.shape
 
 
-
 # Different skip connection types
+
 
 @pytest.mark.parametrize(
     "skip_type",
     ["identity", "linear", "soft-gating"],
 )
-
 def test_fno_block_skip_types(skip_type):
     """FNOBlock should support all skip connection types."""
 

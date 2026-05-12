@@ -22,10 +22,7 @@
 # For any clarifications or special considerations,
 # please contact: contact@scirex.org
 
-"""
-Unit tests for ChannelMLP and LinearChannelMLP layers.
-Tests are dimension-agnostic (N-D spatial inputs).
-"""
+"""Unit tests for ChannelMLP and LinearChannelMLP layers."""
 
 import jax
 import jax.numpy as jnp
@@ -37,14 +34,14 @@ from scirex.operators.layers.channel_mlp import ChannelMLP, LinearChannelMLP
 @pytest.mark.parametrize(
     "spatial_shape",
     [
-        (16, 16),          # 2D
-        (8, 8, 8),         # 3D
-        (4, 4, 4, 4),      # 4D
+        (16, 16),  # 2D
+        (8, 8, 8),  # 3D
+        (4, 4, 4, 4),  # 4D
     ],
 )
 def test_channel_mlp_forward_nd(spatial_shape):
     """Test ChannelMLP forward pass for N-D spatial inputs."""
-    
+
     rng = jax.random.PRNGKey(0)
 
     batch = 2
@@ -73,10 +70,9 @@ def test_channel_mlp_forward_nd(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_channel_mlp_default_hidden(spatial_shape):
     """Test ChannelMLP when hidden_channels is None."""
-    
+
     rng = jax.random.PRNGKey(0)
 
     batch = 2
@@ -104,10 +100,9 @@ def test_channel_mlp_default_hidden(spatial_shape):
         (6, 6, 6),
     ],
 )
-
 def test_channel_mlp_with_dropout(spatial_shape):
     """Test ChannelMLP with dropout enabled."""
-    
+
     rng = jax.random.PRNGKey(0)
 
     batch = 2
@@ -142,10 +137,9 @@ def test_channel_mlp_with_dropout(spatial_shape):
         (8, 8, 8),
     ],
 )
-
 def test_linear_channel_mlp_forward_nd(spatial_shape):
     """Test LinearChannelMLP forward pass for N-D spatial inputs."""
-    
+
     rng = jax.random.PRNGKey(0)
 
     batch = 2

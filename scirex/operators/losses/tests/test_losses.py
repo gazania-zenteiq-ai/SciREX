@@ -26,34 +26,37 @@ import jax.numpy as jnp
 import pytest
 from scirex.operators.losses.data_losses import mse, lp_loss
 
+
 def test_mse():
     """Test MSE loss calculation."""
     pred = jnp.array([[1.0, 2.0], [3.0, 4.0]])
     target = jnp.array([[1.1, 1.9], [3.2, 3.8]])
-    
+
     expected = jnp.mean((pred - target) ** 2)
     actual = mse(pred, target)
-    
+
     assert jnp.allclose(actual, expected)
+
 
 def test_lp_loss():
     """Test Relative Lp loss calculation."""
     # (batch, nx, channels)
     pred = jnp.ones((2, 4, 1)) * 2.0
     target = jnp.ones((2, 4, 1)) * 1.0
-    
+
     # diff = 1.0, norm_2 = sqrt(1^2 * 4) = 2.0
     # target = 1.0, norm_2 = sqrt(1^2 * 4) = 2.0
     # relative = 2.0 / 2.0 = 1.0
-    
+
     actual = lp_loss(pred, target, p=2)
     assert jnp.allclose(actual, 1.0)
+
 
 def test_lp_loss_zero_target():
     """Test Lp loss with zero target to ensure numerical stability."""
     pred = jnp.ones((2, 4, 1))
     target = jnp.zeros((2, 4, 1))
-    
+
     # Should not crash due to 1e-8 in denominator
     actual = lp_loss(pred, target, p=2)
     assert not jnp.isnan(actual)
