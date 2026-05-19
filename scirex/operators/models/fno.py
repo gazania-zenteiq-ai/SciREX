@@ -83,7 +83,7 @@ class FNO(nn.Module):
 
         # Stage 4: Iterative Kernel Integration (Processing)
         # Global information propagation through Fourier space
-        for _ in range(self.n_layers):
+        for i in range(self.n_layers):
             x = FNOBlock(
                 hidden_channels=self.hidden_channels,
                 n_modes=self.n_modes,
@@ -92,7 +92,7 @@ class FNO(nn.Module):
                 skip_type=self.fno_skip,
                 channel_mlp_skip=self.channel_mlp_skip,
                 use_channel_mlp=self.use_channel_mlp,
-            )(x)
+            )(x, is_last=(i == self.n_layers - 1))
 
         # Stage 5: Spectral projection (Decoder)
         # Maps latent representation back to the physical target space

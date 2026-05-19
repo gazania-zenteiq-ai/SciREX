@@ -42,7 +42,9 @@ class FNOBlock(nn.Module):
     use_channel_mlp: bool = True
 
     @nn.compact
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+    def __call__(self, x: jnp.ndarray, is_last: bool = False) -> jnp.ndarray:
+        x_in = x  # Store block input for Channel MLP skip connection, matching PyTorch exactly
+
         # Step 1: Global feature extraction via Spectral Convolution
         y_s = SpectralConv(
             in_channels=self.hidden_channels,
@@ -61,23 +63,25 @@ class FNOBlock(nn.Module):
         if self.use_norm:
             x = nn.InstanceNorm()(x)
 
-        x = self.activation(x)
+        if not is_last:
+            x = self.activation(x)
 
         # Step 4: Point-wise refinement (Channel MLP)
         # Often referred to as the 'modern' FNO variant or 'FNO-MLP'
         if self.use_channel_mlp:
             y_mlp = ChannelMLP(
                 out_channels=self.hidden_channels,
-                hidden_channels=self.hidden_channels,
+                hidden_channels=self.hidden_channels // 2,
                 n_layers=2,
                 activation=self.activation,
             )(x)
 
             y_skip = SkipConnection(
                 out_channels=self.hidden_channels, skip_type=self.channel_mlp_skip
-            )(x)
+            )(x_in)
 
             x = y_mlp + y_skip
-            x = self.activation(x)
+            if not is_last:
+                x = self.activation(x)
 
         return x

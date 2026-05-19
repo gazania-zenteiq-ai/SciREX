@@ -37,6 +37,8 @@ class SpectralConv(nn.Module):
     n_modes: Tuple[int, ...]
     init_std: Optional[float] = None
 
+    bias: bool = True
+
     @nn.compact
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         # x shape: (batch, dim1, dim2, ..., dimN, in_channels)
@@ -56,20 +58,34 @@ class SpectralConv(nn.Module):
 
         # 1. FFT
         axes = tuple(range(1, n_dim + 1))
-        x_ft = jnp.fft.rfftn(x, axes=axes, norm="ortho")
+        x_ft = jnp.fft.rfftn(x, axes=axes, norm="backward")
 
         # 2. Weights Initialization
-        scale = 0.05 if self.init_std is None else self.init_std
-        weights_shape = (self.in_channels, self.out_channels) + self.n_modes
+        scale = (2.0 / (self.in_channels + self.out_channels)) ** 0.5 if self.init_std is None else self.init_std
+        half_modes = tuple(m // 2 for m in self.n_modes[:-1]) + (self.n_modes[-1] // 2 + 1,)
+        weights_shape = (self.in_channels, self.out_channels) + half_modes
 
         # For N dimensions, the number of corners in frequency space is 2**(N-1).
         n_corners = 2 ** (n_dim - 1)
-        weights = [
+        
+        # PyTorch Adam treats real and imaginary parts of complex parameters as independent real parameters.
+        # optax.adamw treats a complex parameter as a single parameter and uses |g|^2 for variance, coupling their learning rates.
+        # To achieve parity, we split the complex weights into explicit real and imaginary parameters!
+        weights_r = [
             self.param(
-                f"weights_{i+1}",
-                jax.nn.initializers.normal(stddev=scale),
+                f"weights_r_{i+1}",
+                jax.nn.initializers.normal(stddev=scale / (2**0.5)),
                 weights_shape,
-                jnp.complex64,
+                jnp.float32,
+            )
+            for i in range(n_corners)
+        ]
+        weights_i = [
+            self.param(
+                f"weights_i_{i+1}",
+                jax.nn.initializers.normal(stddev=scale / (2**0.5)),
+                weights_shape,
+                jnp.float32,
             )
             for i in range(n_corners)
         ]
@@ -100,7 +116,7 @@ class SpectralConv(nn.Module):
             slices_out = [slice(None)]  # batch
 
             for d, sign in enumerate(signs):
-                modes = self.n_modes[d]
+                modes = half_modes[d]
                 if sign == 1:
                     slices_in.append(slice(None, modes))
                     slices_out.append(slice(None, modes))
@@ -109,7 +125,7 @@ class SpectralConv(nn.Module):
                     slices_out.append(slice(-modes, None))
 
             # Last spatial dimension (always positive frequencies for RFFT)
-            last_modes = self.n_modes[-1]
+            last_modes = half_modes[-1]
             slices_in.append(slice(None, last_modes))
             slices_out.append(slice(None, last_modes))
 
@@ -119,11 +135,11 @@ class SpectralConv(nn.Module):
 
             # Extract corner, multiply, and inject back
             x_corner = x_ft[tuple(slices_in)]
-            w_corner = weights[corner_idx]
+            wr = weights_r[corner_idx]
+            wi = weights_i[corner_idx]
 
             # Bypass complex einsum unsupported functionality issue on CPU
             xr, xi = jnp.real(x_corner), jnp.imag(x_corner)
-            wr, wi = jnp.real(w_corner), jnp.imag(w_corner)
             out_r = jnp.einsum(einsum_str, xr, wr) - jnp.einsum(einsum_str, xi, wi)
             out_i = jnp.einsum(einsum_str, xr, wi) + jnp.einsum(einsum_str, xi, wr)
             out_corner = out_r + 1j * out_i
@@ -133,5 +149,18 @@ class SpectralConv(nn.Module):
             corner_idx += 1
 
         # 5. Inverse FFT
-        x = jnp.fft.irfftn(out_ft, s=spatial_dims, axes=axes, norm="ortho")
+        x = jnp.fft.irfftn(out_ft, s=spatial_dims, axes=axes, norm="backward")
+
+        # 6. Learnable Bias
+        if self.bias:
+            bias_val = self.param(
+                "bias",
+                jax.nn.initializers.normal(stddev=scale),
+                (self.out_channels,),
+            )
+            # Reshape bias for broadcasting channels-last: (1, ..., 1, out_channels)
+            reshape_shape = [1] * (n_dim + 2)
+            reshape_shape[-1] = self.out_channels
+            x = x + bias_val.reshape(reshape_shape)
+
         return x
