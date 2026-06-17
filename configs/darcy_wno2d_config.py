@@ -32,10 +32,7 @@ def _default_darcy_path(filename: str) -> str:
     """Prefer local Darcy copies before falling back to repo data folders."""
     home = os.path.expanduser("~")
     candidates = [
-        os.path.join(home, "Downloads", "darcy_421", filename),
-        os.path.join(home, "Downloads", "Darcy_421", filename),
-        os.path.join("scirex", "operators", "data", "Darcy_421", filename),
-        os.path.join("scirex", "operators", "data", "wno_data", filename),
+        os.path.join(home, "Harshdeep", "Data", "Darcy_421", filename),
     ]
     for path in candidates:
         if os.path.exists(path):

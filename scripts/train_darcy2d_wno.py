@@ -28,6 +28,13 @@ import os
 import sys
 import time
 
+# Prevents memory fragmentation
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
+# Stops JAX from blindly reserving 90% of your VRAM on startup
+os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+# os.environ["JAX_ENABLE_X64"] = "True" 
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+
 os.environ["XLA_FLAGS"] = (
     os.environ.get("XLA_FLAGS", "") + " --xla_gpu_deterministic_ops=true"
 )

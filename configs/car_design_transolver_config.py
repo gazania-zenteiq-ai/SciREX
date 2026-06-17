@@ -32,11 +32,13 @@ def get_config() -> config_dict.ConfigDict:
 
     # Data configuration
     config.data = config_dict.ConfigDict()
-    config.data.data_dir = "/home/gazania/zan_folder/SciREX/data/car_design/preprocessed"
-    config.data.batch_size = 4
+    config.data.data_dir = "/home/harshdeep/Harshdeep/Data/mlcfd_data/training_data"
+    config.data.batch_size = 1            # matches reference (batch_size=1)
     config.data.shuffle = True
+    config.data.fold_id = 0               # param folder held out as validation (0..8)
 
-    # Model configuration (Transolver)
+    # Model configuration (Transolver) — matches reference main.py exactly
+    # Input: space_dim=7 → [x, y, z, sdf, nx, ny, nz] per point
     config.model = config_dict.ConfigDict()
     config.model.hidden_channels = 256
     config.model.out_channels = 4       # [velo_x, velo_y, velo_z, pressure]
@@ -53,6 +55,7 @@ def get_config() -> config_dict.ConfigDict:
     config.training.learning_rate = 1e-3
     config.training.weight_decay = 1e-4
     config.training.reg_weight = 0.5    # Weight for pressure loss on surface
+    config.training.val_iter = 5        # Evaluate on val split every N epochs
 
     # Optimizer configuration
     config.optimizer = config_dict.ConfigDict()
